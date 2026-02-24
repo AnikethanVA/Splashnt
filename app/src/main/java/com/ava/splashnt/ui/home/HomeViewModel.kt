@@ -2,8 +2,6 @@ package com.ava.splashnt.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ava.splashnt.data.model.UnsplashModel
-import com.ava.splashnt.data.repository.WallpaperRepository
 import com.ava.splashnt.data.repository.WallpaperRepositoryProvider
 import com.ava.splashnt.data.repository.WallpaperSource
 import com.ava.splashnt.ui.home.WallpaperUIState.*
