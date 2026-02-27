@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import com.ava.splashnt.ui.home.HomeScreen
-import com.ava.splashnt.ui.home.ShowLoader
 import com.ava.splashnt.ui.theme.SplashntTheme
 
 class MainActivity : ComponentActivity() {

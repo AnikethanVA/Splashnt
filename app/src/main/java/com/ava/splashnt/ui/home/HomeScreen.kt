@@ -1,5 +1,6 @@
 package com.ava.splashnt.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,14 +9,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan.Companion.FullLine
-import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.Card
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -37,6 +42,7 @@ fun HomeScreen(
 
     when(uiState) {
         is Loading -> {
+            println("CUSTOMTAG - Inside HomeScreen before ShowLoader is called.")
             ShowLoader(modifier)
         }
         is Error -> {
@@ -57,6 +63,7 @@ fun ShowLoader(
 ) {
     Box(
         modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 8.dp)
             .fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -72,6 +79,7 @@ fun ShowError(
 ) {
     Box(
         modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 8.dp)
             .fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -89,13 +97,19 @@ fun ShowWallpapers(
     wallpaperUIState: Success,
     onLoadMore: () -> Unit,
 ) {
+
+    val lazyStaggeredGridState = rememberLazyStaggeredGridState()
+
     LazyVerticalStaggeredGrid(
-        modifier = modifier.padding(horizontal = 8.dp),
+        state = lazyStaggeredGridState,
+        modifier = modifier
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 8.dp),
         columns = StaggeredGridCells.Fixed(2),
         verticalItemSpacing = 8.dp,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        itemsIndexed(wallpaperUIState.images) { index, image ->
+        items(items = wallpaperUIState.images) { image ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -109,17 +123,32 @@ fun ShowWallpapers(
                     contentScale = ContentScale.FillWidth,
                 )
             }
-
-            if(!wallpaperUIState.isPaginating && index == (wallpaperUIState.images.size - 5)) {
-                onLoadMore()
-            }
         }
 
-        if(wallpaperUIState.isPaginating) {
+        if (wallpaperUIState.isPaginating && lazyStaggeredGridState.canScrollBackward) {
             item(span = FullLine) {
+                println("CUSTOMTAG - Inside HomeScreen before ShowBottomLoader is shown. Image size = ${wallpaperUIState.images.size}")
                 ShowBottomLoader()
             }
         }
+
+    }
+
+    LaunchedEffect(
+        lazyStaggeredGridState,
+        wallpaperUIState.images.size,
+        wallpaperUIState.isPaginating
+    ) {
+        snapshotFlow {
+            lazyStaggeredGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .collect { lastVisibleItemIndex ->
+                lastVisibleItemIndex?.let { lastVisibleItemIndex ->
+                    if(!wallpaperUIState.isPaginating && lastVisibleItemIndex >= (wallpaperUIState.images.size - 1)) {
+                        println("CUSTOMTAG - Inside HomeScreen before onLoadMore is called. Index = $lastVisibleItemIndex, Image size = ${wallpaperUIState.images.size}")
+                        onLoadMore()
+                    }
+                }
+            }
 
     }
 }
