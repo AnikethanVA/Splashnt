@@ -31,6 +31,7 @@ import coil.compose.AsyncImage
 import com.ava.splashnt.ui.home.WallpaperUIState.Error
 import com.ava.splashnt.ui.home.WallpaperUIState.Loading
 import com.ava.splashnt.ui.home.WallpaperUIState.Success
+import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -134,22 +135,19 @@ fun ShowWallpapers(
 
     }
 
-    LaunchedEffect(
-        lazyStaggeredGridState,
-        wallpaperUIState.images.size,
-        wallpaperUIState.isPaginating
-    ) {
+    LaunchedEffect(lazyStaggeredGridState, wallpaperUIState.images.size, wallpaperUIState.isPaginating) {
         snapshotFlow {
-            lazyStaggeredGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
-            .collect { lastVisibleItemIndex ->
-                lastVisibleItemIndex?.let { lastVisibleItemIndex ->
-                    if(!wallpaperUIState.isPaginating && lastVisibleItemIndex >= (wallpaperUIState.images.size - 1)) {
-                        println("CUSTOMTAG - Inside HomeScreen before onLoadMore is called. Index = $lastVisibleItemIndex, Image size = ${wallpaperUIState.images.size}")
-                        onLoadMore()
-                    }
+            val lastVisibleItemIndex = lazyStaggeredGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val reachedBottom = lastVisibleItemIndex >= (wallpaperUIState.images.size - 1)
+            reachedBottom && lazyStaggeredGridState.isScrollInProgress
+        }
+            .distinctUntilChanged()
+            .collect { shouldLoadMore ->
+                if (shouldLoadMore && !wallpaperUIState.isPaginating) {
+                    println("CUSTOMTAG - Inside HomeScreen before onLoadMore is called. Image size = ${wallpaperUIState.images.size}")
+                    onLoadMore()
                 }
             }
-
     }
 }
 
