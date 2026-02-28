@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.ava.splashnt.data.model.UnsplashModel
 import com.ava.splashnt.ui.home.WallpaperUIState.Error
 import com.ava.splashnt.ui.home.WallpaperUIState.Loading
 import com.ava.splashnt.ui.home.WallpaperUIState.Success
@@ -37,13 +38,13 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = koinViewModel()
+    viewModel: HomeViewModel = koinViewModel(),
+    onImageClicked: (UnsplashModel) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     when(uiState) {
         is Loading -> {
-            println("CUSTOMTAG - Inside HomeScreen before ShowLoader is called.")
             ShowLoader(modifier)
         }
         is Error -> {
@@ -51,7 +52,7 @@ fun HomeScreen(
         }
 
         is Success -> {
-            ShowWallpapers(modifier = modifier, wallpaperUIState = (uiState as Success), onLoadMore = viewModel::loadMoreImages)
+            ShowWallpapers(modifier = modifier, wallpaperUIState = (uiState as Success), onLoadMore = viewModel::loadMoreImages, onImageClicked = onImageClicked)
         }
     }
 }
@@ -97,6 +98,7 @@ fun ShowWallpapers(
     modifier: Modifier = Modifier,
     wallpaperUIState: Success,
     onLoadMore: () -> Unit,
+    onImageClicked: (UnsplashModel) -> Unit
 ) {
 
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
@@ -114,7 +116,9 @@ fun ShowWallpapers(
             Card(
                 modifier = Modifier
                     .fillMaxWidth(),
-                onClick = {},
+                onClick = {
+                    onImageClicked(image)
+                },
             ) {
                 AsyncImage(
                     model = image.urls.thumbUrl,
@@ -128,7 +132,6 @@ fun ShowWallpapers(
 
         if (wallpaperUIState.isPaginating && lazyStaggeredGridState.canScrollBackward) {
             item(span = FullLine) {
-                println("CUSTOMTAG - Inside HomeScreen before ShowBottomLoader is shown. Image size = ${wallpaperUIState.images.size}")
                 ShowBottomLoader()
             }
         }
@@ -144,7 +147,6 @@ fun ShowWallpapers(
             .distinctUntilChanged()
             .collect { shouldLoadMore ->
                 if (shouldLoadMore && !wallpaperUIState.isPaginating) {
-                    println("CUSTOMTAG - Inside HomeScreen before onLoadMore is called. Image size = ${wallpaperUIState.images.size}")
                     onLoadMore()
                 }
             }

@@ -21,7 +21,6 @@ class HomeViewModel(
     val uiState = _uiState.asStateFlow()
 
     init {
-        println("CUSTOMTAG - Inside HomeViewModel Init block")
         fetchWallpapers(isPaginating = false)
     }
 
@@ -35,20 +34,17 @@ class HomeViewModel(
     }
 
     fun loadMoreImages() {
-        println("CUSTOMTAG - Inside HomeViewModel loadMoreImages block")
         currentPage ++
         fetchWallpapers(isPaginating = true)
     }
 
     private fun fetchWallpapers(isPaginating: Boolean) {
-        println("CUSTOMTAG - Inside HomeViewModel fetchWallpapers block")
         viewModelScope.launch {
             try {
 
                 val currentImages = if(_uiState.value is Success) (_uiState.value as Success).images else emptyList()
 
                 if(currentImages.isNotEmpty()) {
-                    println("CUSTOMTAG - Inside HomeViewModel fetchWallpapers block - if condition")
                     _uiState.value = Success(currentImages, isPaginating)
                 }
 
@@ -56,7 +52,6 @@ class HomeViewModel(
 
                 val allImages = currentImages + nextPageImages
 
-                println("CUSTOMTAG - Inside HomeViewModel fetchWallpapers block - set all images, Total Images: ${allImages.size}")
                 _uiState.value = Success( allImages, false)
             } catch(exception: Exception) {
                 _uiState.value = Error("Error Message: ${exception.message}")
