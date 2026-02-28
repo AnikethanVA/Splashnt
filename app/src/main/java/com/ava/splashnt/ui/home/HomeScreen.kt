@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan.Comp
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -119,6 +120,10 @@ fun ShowWallpapers(
                 onClick = {
                     onImageClicked(image)
                 },
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 0.dp,
+                )
             ) {
                 AsyncImage(
                     model = image.urls.thumbUrl,
