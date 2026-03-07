@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavDisplay(
                         backStack = backstack,
-                        modifier = Modifier.padding(innerPadding),
                         onBack = { backstack.removeLastOrNull() },
                         entryDecorators = listOf(
                             rememberSaveableStateHolderNavEntryDecorator(),
@@ -37,7 +36,7 @@ class MainActivity : ComponentActivity() {
                         ),
                         entryProvider = entryProvider {
                             entry<HomeScreen> {
-                                com.ava.splashnt.ui.home.HomeScreen { image ->
+                                com.ava.splashnt.ui.home.HomeScreen(modifier = Modifier.padding(innerPadding)) { image ->
                                     backstack.add(DetailsScreen(image))
                                 }
                             }
