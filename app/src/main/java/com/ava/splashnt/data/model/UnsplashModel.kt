@@ -35,4 +35,14 @@ data class UnsplashUser(
 
     @SerialName("name")
     val userName: String,
+
+    @SerialName("links")
+    val userLinks: UnsplashLinks
+)
+
+@Serializable
+data class UnsplashLinks(
+
+    @SerialName("html")
+    val photographerProfileUrl: String
 )
