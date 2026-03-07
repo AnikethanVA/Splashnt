@@ -126,7 +126,7 @@ fun ShowWallpapers(
                 )
             ) {
                 AsyncImage(
-                    model = image.urls.thumbUrl,
+                    model = image.urls.regularUrl,
                     contentDescription = image.description,
                     modifier = Modifier
                         .fillMaxWidth(),
