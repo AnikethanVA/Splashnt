@@ -1,10 +1,15 @@
 package com.ava.splashnt.ui.detail
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -34,8 +39,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import coil.compose.SubcomposeAsyncImage
 import com.ava.splashnt.data.model.UnsplashModel
 import kotlinx.coroutines.async
@@ -156,6 +165,8 @@ fun ShowFullScreenImage(
 
 @Composable
 fun ImageDetailsOverlay(image: UnsplashModel) {
+
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -175,10 +186,27 @@ fun ImageDetailsOverlay(image: UnsplashModel) {
             text = image.user.userName
         )
         Text(
-            modifier = Modifier.padding(start = 16.dp),
-            text = image.user.userLinks.photographerProfileUrl
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .clickable {
+                    openLinkInBrowser(image.user.userLinks.photographerProfileUrl, context)
+                }
+            ,
+            text = image.user.userLinks.photographerProfileUrl,
+            style = TextStyle(
+                textDecoration = TextDecoration.Underline
+            )
         )
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+private fun openLinkInBrowser(link: String, context: Context) {
+    val intent = Intent(Intent.ACTION_VIEW, link.toUri())
+    try {
+        context.startActivity(intent)
+    }catch (_: ActivityNotFoundException) {
+        Toast.makeText(context, "No application found to open the link", Toast.LENGTH_SHORT).show()
     }
 }
 
