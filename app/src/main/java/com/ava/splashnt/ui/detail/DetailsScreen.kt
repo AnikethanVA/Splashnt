@@ -22,12 +22,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Replay
+import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,6 +55,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.ava.splashnt.data.model.UnsplashModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -79,6 +89,8 @@ fun ShowFullScreenImage(
     val transformCoroutineScope = rememberCoroutineScope()
 
     var shouldShowImageOverlay by remember { mutableStateOf(false) }
+
+    var retryKey by remember { mutableIntStateOf(0) }
 
     BoxWithConstraints(
         modifier = modifier
@@ -114,7 +126,10 @@ fun ShowFullScreenImage(
             }
 
         SubcomposeAsyncImage(
-            model = image.urls.fullUrl,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(image.urls.fullUrl)
+                .memoryCacheKey("${image.urls.fullUrl}_$retryKey")
+                .build(),
             loading = { ShowLoader() },
             contentDescription = image.description,
             modifier = Modifier
@@ -132,24 +147,34 @@ fun ShowFullScreenImage(
                             shouldShowImageOverlay = !shouldShowImageOverlay
                         },
                         onDoubleTap = {
-                        transformCoroutineScope.launch {
-                            if (scale.value == 1f && imageWidth > 0) {
-                                scale.animateTo(maxOf(screenHeight / displayHeight, screenWidth / displayWidth))
-                            } else {
-                                val scaleJob = async { scale.animateTo(1f) }
-                                val offsetXJob = async { offsetX.animateTo(0f) }
-                                val offsetYJob = async { offsetY.animateTo(0f) }
+                            transformCoroutineScope.launch {
+                                if (scale.value == 1f && imageWidth > 0) {
+                                    scale.animateTo(
+                                        maxOf(
+                                            screenHeight / displayHeight,
+                                            screenWidth / displayWidth
+                                        )
+                                    )
+                                } else {
+                                    val scaleJob = async { scale.animateTo(1f) }
+                                    val offsetXJob = async { offsetX.animateTo(0f) }
+                                    val offsetYJob = async { offsetY.animateTo(0f) }
 
-                                awaitAll(scaleJob, offsetXJob, offsetYJob)
+                                    awaitAll(scaleJob, offsetXJob, offsetYJob)
+                                }
                             }
-                        }
-                    })
+                        })
                 },
             contentScale = ContentScale.FillWidth,
             onSuccess = { image ->
                 val drawable = image.result.drawable
                 imageWidth = drawable.intrinsicWidth.toFloat()
                 imageHeight = drawable.intrinsicHeight.toFloat()
+            },
+            error = {
+                ShowLoadImageError(onRetryClicked = {
+                    retryKey ++
+                })
             },
         )
 
@@ -207,6 +232,45 @@ private fun openLinkInBrowser(link: String, context: Context) {
         context.startActivity(intent)
     }catch (_: ActivityNotFoundException) {
         Toast.makeText(context, "No application found to open the link", Toast.LENGTH_SHORT).show()
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ShowLoadImageError(onRetryClicked: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+        ,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            modifier = Modifier
+                .size(150.dp),
+            imageVector = Icons.Rounded.Warning,
+            contentDescription = "Image Load Error",
+            tint = Color.White
+        )
+        Text(
+            text = "Failed to load the image",
+            style = TextStyle(
+                color = Color.White
+            )
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextButton(
+            shape = CircleShape,
+            colors = ButtonDefaults.textButtonColors(containerColor = Color.White),
+            onClick = onRetryClicked,
+            content = {
+                Text(text = "Retry")
+                Icon(imageVector = Icons.Outlined.Replay, contentDescription = "Retry")
+            },
+        )
     }
 }
 
