@@ -235,7 +235,6 @@ private fun openLinkInBrowser(link: String, context: Context) {
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ShowLoadImageError(onRetryClicked: () -> Unit) {
     Column(
