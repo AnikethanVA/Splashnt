@@ -1,9 +1,16 @@
 package com.ava.splashnt.ui.detail
 
+import android.Manifest
+import android.app.DownloadManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Environment
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
@@ -17,6 +24,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,12 +33,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -192,7 +202,13 @@ fun ShowFullScreenImage(
 fun ImageDetailsOverlay(image: UnsplashModel) {
 
     val context = LocalContext.current
-    Column(
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) {
+        onDownloadImageClicked(context, image)
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -203,26 +219,68 @@ fun ImageDetailsOverlay(image: UnsplashModel) {
                     endY = Float.POSITIVE_INFINITY
                 )
             ),
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.Start
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
     ) {
-        Text(
-            modifier = Modifier.padding(start = 16.dp),
-            text = image.user.userName
-        )
-        Text(
-            modifier = Modifier
-                .padding(start = 16.dp)
-                .clickable {
-                    openLinkInBrowser(image.user.userLinks.photographerProfileUrl, context)
-                }
-            ,
-            text = image.user.userLinks.photographerProfileUrl,
-            style = TextStyle(
-                textDecoration = TextDecoration.Underline
+        Column(
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                modifier = Modifier.padding(start = 16.dp),
+                text = image.user.userName,
+                color = Color.White
             )
+            Text(
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .clickable {
+                        openLinkInBrowser(image.user.userLinks.photographerProfileUrl, context)
+                    }
+                ,
+                text = image.user.userLinks.photographerProfileUrl,
+                style = TextStyle(
+                    textDecoration = TextDecoration.Underline
+                ),
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        TextButton(
+            modifier = Modifier
+                .padding(bottom = 16.dp, end = 16.dp),
+            shape = CircleShape,
+            colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+            onClick = {
+                if(context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                else {
+                    onDownloadImageClicked(context, image)
+                }
+                      },
+            content = {
+                Text(text = "Download", color = MaterialTheme.colorScheme.onPrimary)
+                Icon(imageVector = Icons.Outlined.Download, contentDescription = "Download", tint = MaterialTheme.colorScheme.onPrimary)
+            },
         )
-        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+private fun onDownloadImageClicked(context: Context, image: UnsplashModel) {
+    val downloadManager: DownloadManager = context.getSystemService(DownloadManager::class.java)
+    val downloadRequest = DownloadManager
+        .Request(image.urls.fullUrl.toUri())
+        .setTitle("Downloading")
+        .setDescription("Downloading Wallpaper - ${image.id}")
+        .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "${image.id}.jpg")
+    val status = downloadManager.enqueue(downloadRequest)
+    if(status == -1L) {
+        Toast.makeText(context, "Something Went Wrong", Toast.LENGTH_SHORT).show()
+    } else if(context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+        Toast.makeText(context, "Download Started. Check Notification", Toast.LENGTH_SHORT).show()
+    } else {
+        Toast.makeText(context, "Notification Permission has been denied. Check Downloads folder for the wallpaper", Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -263,10 +321,10 @@ fun ShowLoadImageError(onRetryClicked: () -> Unit) {
 
         TextButton(
             shape = CircleShape,
-            colors = ButtonDefaults.textButtonColors(containerColor = Color.White),
+            colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
             onClick = onRetryClicked,
             content = {
-                Text(text = "Retry")
+                Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
                 Icon(imageVector = Icons.Outlined.Replay, contentDescription = "Retry")
             },
         )
