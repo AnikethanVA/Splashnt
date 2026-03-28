@@ -8,24 +8,40 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.ava.splashnt.ui.Destinations
 import com.ava.splashnt.ui.DetailsScreen
 import com.ava.splashnt.ui.HomeScreen
 import com.ava.splashnt.ui.theme.SplashntTheme
+import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val navKeySaver = listSaver(
+            save = {navKeyList ->
+                navKeyList.map {  navKey ->
+                    Json.encodeToString(navKey)
+                }
+            },
+            restore = { navKeyList ->
+                navKeyList.map { navKeyString ->
+                    Json.decodeFromString<Destinations>(navKeyString)
+                }.toMutableStateList()
+            }
+        )
         setContent {
             SplashntTheme {
-                val backstack = remember { mutableStateListOf<NavKey>(HomeScreen) }
+                val backstack = rememberSaveable(saver = navKeySaver) { mutableStateListOf(HomeScreen) }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     NavDisplay(
                         backStack = backstack,

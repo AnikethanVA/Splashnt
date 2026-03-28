@@ -5,9 +5,11 @@ import com.ava.splashnt.data.model.UnsplashModel
 import kotlinx.serialization.Serializable
 
 @Serializable
-object HomeScreen: NavKey
+sealed interface Destinations: NavKey
+@Serializable
+object HomeScreen: Destinations
 
 @Serializable
 data class DetailsScreen(
     val image: UnsplashModel
-): NavKey
+): Destinations

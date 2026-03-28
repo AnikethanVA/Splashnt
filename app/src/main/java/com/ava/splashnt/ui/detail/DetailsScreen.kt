@@ -3,6 +3,7 @@ package com.ava.splashnt.ui.detail
 import android.Manifest
 import android.app.DownloadManager
 import android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+import android.app.WallpaperManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -14,6 +15,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -40,7 +42,9 @@ import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material.icons.rounded.Warning
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -68,11 +72,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.toBitmap
 import com.ava.splashnt.data.model.UnsplashModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -202,14 +209,18 @@ fun ShowFullScreenImage(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            ImageDetailsOverlay(imageModel, imageBitmap)
+            ImageDetailsOverlay(imageModel, imageBitmap, this)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageDetailsOverlay(imageModel: UnsplashModel, imageBitmap: Bitmap?) {
+fun ImageDetailsOverlay(
+    imageModel: UnsplashModel,
+    imageBitmap: Bitmap?,
+    animatedScope: AnimatedVisibilityScope
+) {
 
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -217,6 +228,23 @@ fun ImageDetailsOverlay(imageModel: UnsplashModel, imageBitmap: Bitmap?) {
     ) { _ ->
         onDownloadImageClicked(context, imageModel)
     }
+
+    var shouldShowSetAsAlertDialog by remember { mutableStateOf(false) }
+
+    val setWallpaperScope = rememberCoroutineScope { Dispatchers.IO }
+
+    ShowSetAsAlertDialog(
+        shouldShowSetAsAlertDialog,
+        onDismissCallback = { shouldShowSetAsAlertDialog = false },
+        onWallpaperLocationSelected = { wallpaperLocation ->
+            imageBitmap?.let { imageBitmap ->
+                setWallpaperScope.launch {
+                    setWallpaperAs(context, imageBitmap, wallpaperLocation.value)
+                }
+                shouldShowSetAsAlertDialog = false
+            }
+        }
+    )
 
     Column(
         modifier = Modifier
@@ -262,7 +290,7 @@ fun ImageDetailsOverlay(imageModel: UnsplashModel, imageBitmap: Bitmap?) {
                     shape = CircleShape,
                     colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
                     onClick = {
-                        // Show a popup or modal
+                        shouldShowSetAsAlertDialog = true
                     },
                     content = {
                         Text(text = "Set As", color = MaterialTheme.colorScheme.onPrimary)
@@ -305,6 +333,96 @@ fun ImageDetailsOverlay(imageModel: UnsplashModel, imageBitmap: Bitmap?) {
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ShowSetAsAlertDialog(
+    shouldShow: Boolean,
+    onDismissCallback: () -> Unit,
+    onWallpaperLocationSelected: (WallpaperLocation) -> Unit
+) {
+    if(shouldShow) {
+        BasicAlertDialog(
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = true
+            ),
+            onDismissRequest = onDismissCallback,
+        ) {
+            SetAsDialog(onWallpaperLocationSelected)
+        }
+    }
+}
+
+@Composable
+private fun SetAsDialog(
+    onWallpaperLocationSelected: (WallpaperLocation) -> Unit
+) {
+    Card {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Where do you want to set this wallpaper ?",
+                fontSize = 16.sp,
+                style = TextStyle(
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                TextButton(
+                    onClick = {
+                        onWallpaperLocationSelected(WallpaperLocation.HOMESCREEN)
+                    }
+                ) {
+                    Text("Home Screen")
+                }
+
+                TextButton(
+                    onClick = {
+                        onWallpaperLocationSelected(WallpaperLocation.LOCKSCREEN)
+                    }
+                ) {
+                    Text("Lock Screen")
+                }
+
+                TextButton(
+                    onClick = {
+                        onWallpaperLocationSelected(WallpaperLocation.BOTH)
+                    }
+                ) {
+                    Text("Both")
+                }
+            }
+        }
+    }
+
+}
+
+private fun setWallpaperAs(context: Context, image: Bitmap, userChoice: Int) {
+    WallpaperManager
+        .getInstance(context)
+        .setBitmap(
+            image,
+            null,
+            true,
+            userChoice
+        )
+}
+
+private enum class WallpaperLocation(val value: Int) {
+    HOMESCREEN(1),
+    LOCKSCREEN(2),
+    BOTH(3)
 }
 
 private fun onDownloadImageClicked(context: Context, image: UnsplashModel) {
