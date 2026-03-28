@@ -2,10 +2,12 @@ package com.ava.splashnt.ui.detail
 
 import android.Manifest
 import android.app.DownloadManager
+import android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.Environment
 import android.widget.Toast
@@ -31,13 +33,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Replay
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,8 +69,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
+import coil3.compose.SubcomposeAsyncImage
+import coil3.request.ImageRequest
+import coil3.toBitmap
 import com.ava.splashnt.data.model.UnsplashModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -76,13 +82,13 @@ fun DetailsScreen(
     modifier: Modifier = Modifier,
     image: UnsplashModel
 ) {
-    ShowFullScreenImage(image = image)
+    ShowFullScreenImage(imageModel = image)
 }
 
 @Composable
 fun ShowFullScreenImage(
     modifier: Modifier = Modifier,
-    image: UnsplashModel
+    imageModel: UnsplashModel
 ) {
 
     var displayHeight by remember { mutableFloatStateOf(0f) }
@@ -101,6 +107,8 @@ fun ShowFullScreenImage(
     var shouldShowImageOverlay by remember { mutableStateOf(false) }
 
     var retryKey by remember { mutableIntStateOf(0) }
+
+    var imageBitmap: Bitmap? by remember { mutableStateOf(null) }
 
     BoxWithConstraints(
         modifier = modifier
@@ -137,11 +145,11 @@ fun ShowFullScreenImage(
 
         SubcomposeAsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(image.urls.fullUrl)
-                .memoryCacheKey("${image.urls.fullUrl}_$retryKey")
+                .data(imageModel.urls.fullUrl)
+                .memoryCacheKey("${imageModel.urls.fullUrl}_$retryKey")
                 .build(),
             loading = { ShowLoader() },
-            contentDescription = image.description,
+            contentDescription = imageModel.description,
             modifier = Modifier
                 .fillMaxWidth()
                 .graphicsLayer {
@@ -177,9 +185,10 @@ fun ShowFullScreenImage(
                 },
             contentScale = ContentScale.FillWidth,
             onSuccess = { image ->
-                val drawable = image.result.drawable
-                imageWidth = drawable.intrinsicWidth.toFloat()
-                imageHeight = drawable.intrinsicHeight.toFloat()
+                val resultImageBitmap = image.result.image.toBitmap()
+                imageWidth = resultImageBitmap.width.toFloat()
+                imageHeight = resultImageBitmap.height.toFloat()
+                imageBitmap = resultImageBitmap
             },
             error = {
                 ShowLoadImageError(onRetryClicked = {
@@ -193,22 +202,23 @@ fun ShowFullScreenImage(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            ImageDetailsOverlay(image)
+            ImageDetailsOverlay(imageModel, imageBitmap)
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ImageDetailsOverlay(image: UnsplashModel) {
+fun ImageDetailsOverlay(imageModel: UnsplashModel, imageBitmap: Bitmap?) {
 
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
-    ) {
-        onDownloadImageClicked(context, image)
+    ) { _ ->
+        onDownloadImageClicked(context, imageModel)
     }
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
@@ -219,51 +229,81 @@ fun ImageDetailsOverlay(image: UnsplashModel) {
                     endY = Float.POSITIVE_INFINITY
                 )
             ),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.Start
     ) {
-        Column(
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.Start
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                modifier = Modifier.padding(start = 16.dp),
-                text = image.user.userName,
-                color = Color.White
-            )
-            Text(
-                modifier = Modifier
-                    .padding(start = 16.dp)
-                    .clickable {
-                        openLinkInBrowser(image.user.userLinks.photographerProfileUrl, context)
+            TextButton(
+                shape = CircleShape,
+                colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+                onClick = {
+                    if((context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                    else {
+                        onDownloadImageClicked(context, imageModel)
                     }
-                ,
-                text = image.user.userLinks.photographerProfileUrl,
-                style = TextStyle(
-                    textDecoration = TextDecoration.Underline
-                ),
-                color = Color.White
+                },
+                content = {
+                    Text(text = "Download", color = MaterialTheme.colorScheme.onPrimary)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(imageVector = Icons.Outlined.Download, contentDescription = "Download", tint = MaterialTheme.colorScheme.onPrimary)
+                },
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+            imageBitmap?.let {
+                TextButton(
+                    shape = CircleShape,
+                    colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    onClick = {
+                        // Show a popup or modal
+                    },
+                    content = {
+                        Text(text = "Set As", color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(imageVector = Icons.Outlined.Wallpaper, contentDescription = "Set As", tint = MaterialTheme.colorScheme.onPrimary)
+                    },
+                )
+            }
         }
 
-        TextButton(
+        Row(
             modifier = Modifier
-                .padding(bottom = 16.dp, end = 16.dp),
-            shape = CircleShape,
-            colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
-            onClick = {
-                if(context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
-                else {
-                    onDownloadImageClicked(context, image)
-                }
-                      },
-            content = {
-                Text(text = "Download", color = MaterialTheme.colorScheme.onPrimary)
-                Icon(imageVector = Icons.Outlined.Download, contentDescription = "Download", tint = MaterialTheme.colorScheme.onPrimary)
-            },
-        )
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+            ,
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = imageModel.user.userName,
+                    color = Color.White
+                )
+                Text(
+                    modifier = Modifier
+                        .clickable {
+                            openLinkInBrowser(imageModel.user.userLinks.photographerProfileUrl, context)
+                        }
+                    ,
+                    text = imageModel.user.userLinks.photographerProfileUrl,
+                    style = TextStyle(
+                        textDecoration = TextDecoration.Underline
+                    ),
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
     }
 }
 
@@ -271,9 +311,9 @@ private fun onDownloadImageClicked(context: Context, image: UnsplashModel) {
     val downloadManager: DownloadManager = context.getSystemService(DownloadManager::class.java)
     val downloadRequest = DownloadManager
         .Request(image.urls.fullUrl.toUri())
-        .setTitle("Downloading")
-        .setDescription("Downloading Wallpaper - ${image.id}")
+        .setTitle("Downloading Wallpaper - ${image.id}")
         .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "${image.id}.jpg")
+        .setNotificationVisibility(VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
     val status = downloadManager.enqueue(downloadRequest)
     if(status == -1L) {
         Toast.makeText(context, "Something Went Wrong", Toast.LENGTH_SHORT).show()
