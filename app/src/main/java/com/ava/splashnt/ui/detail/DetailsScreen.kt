@@ -15,8 +15,11 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -24,6 +27,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,10 +42,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Replay
-import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
@@ -62,6 +67,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -74,7 +80,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.graphics.scale
 import androidx.core.net.toUri
+import androidx.palette.graphics.Palette
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.toBitmap
@@ -116,6 +124,11 @@ fun ShowFullScreenImage(
     var retryKey by remember { mutableIntStateOf(0) }
 
     var imageBitmap: Bitmap? by remember { mutableStateOf(null) }
+
+    val defaultTextButtonColor = MaterialTheme.colorScheme.primary
+    val defaultTextButtonTextColor = MaterialTheme.colorScheme.onPrimary
+    var textButtonColorBasedOnWallpaperColor: Color by remember { mutableStateOf(defaultTextButtonColor) }
+    var textButtonTextColorBasedOnWallpaperColor: Color by remember { mutableStateOf(defaultTextButtonTextColor) }
 
     BoxWithConstraints(
         modifier = modifier
@@ -193,9 +206,22 @@ fun ShowFullScreenImage(
             contentScale = ContentScale.FillWidth,
             onSuccess = { image ->
                 val resultImageBitmap = image.result.image.toBitmap()
+                val resultImageBitmapSoftwareCopy = resultImageBitmap.copy(Bitmap.Config.ARGB_8888, false)
+                val scaledResultImage = resultImageBitmapSoftwareCopy.scale(100, 100, false)
+
                 imageWidth = resultImageBitmap.width.toFloat()
                 imageHeight = resultImageBitmap.height.toFloat()
                 imageBitmap = resultImageBitmap
+
+                Palette.from(scaledResultImage).generate { palette ->
+                    val swatch = palette?.vibrantSwatch
+                        ?: palette?.dominantSwatch
+                        ?: palette?.mutedSwatch
+                    swatch?.let { swatch ->
+                        textButtonColorBasedOnWallpaperColor = Color(swatch.rgb)
+                        textButtonTextColorBasedOnWallpaperColor = Color(swatch.titleTextColor)
+                    }
+                }
             },
             error = {
                 ShowLoadImageError(onRetryClicked = {
@@ -209,7 +235,7 @@ fun ShowFullScreenImage(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            ImageDetailsOverlay(imageModel, imageBitmap, this)
+            ImageDetailsOverlay(imageModel, imageBitmap, textButtonColorBasedOnWallpaperColor, textButtonTextColorBasedOnWallpaperColor)
         }
     }
 }
@@ -219,7 +245,8 @@ fun ShowFullScreenImage(
 fun ImageDetailsOverlay(
     imageModel: UnsplashModel,
     imageBitmap: Bitmap?,
-    animatedScope: AnimatedVisibilityScope
+    textButtonColorBasedOnWallpaperColor: Color,
+    textButtonTextColorBasedOnWallpaperColor: Color
 ) {
 
     val context = LocalContext.current
@@ -268,36 +295,26 @@ fun ImageDetailsOverlay(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(
-                shape = CircleShape,
-                colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
-                onClick = {
-                    if((context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
-                    else {
-                        onDownloadImageClicked(context, imageModel)
-                    }
-                },
-                content = {
-                    Text(text = "Download", color = MaterialTheme.colorScheme.onPrimary)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(imageVector = Icons.Outlined.Download, contentDescription = "Download", tint = MaterialTheme.colorScheme.onPrimary)
-                },
-            )
 
+            SpringyTextButton(
+                buttonText = "Download",
+                containerColor = textButtonColorBasedOnWallpaperColor,
+                textColor = textButtonTextColorBasedOnWallpaperColor,
+            ) {
+                if((context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                else {
+                    onDownloadImageClicked(context, imageModel)
+                }
+            }
             imageBitmap?.let {
-                TextButton(
-                    shape = CircleShape,
-                    colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.primary),
-                    onClick = {
+                SpringyTextButton(
+                    buttonText = "Set As",
+                    containerColor = textButtonColorBasedOnWallpaperColor,
+                    textColor = textButtonTextColorBasedOnWallpaperColor
+                ) {
                         shouldShowSetAsAlertDialog = true
-                    },
-                    content = {
-                        Text(text = "Set As", color = MaterialTheme.colorScheme.onPrimary)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(imageVector = Icons.Outlined.Wallpaper, contentDescription = "Set As", tint = MaterialTheme.colorScheme.onPrimary)
-                    },
-                )
+                }
             }
         }
 
@@ -333,6 +350,43 @@ fun ImageDetailsOverlay(
             }
         }
     }
+}
+
+@Composable
+fun SpringyTextButton(
+    buttonText: String,
+    containerColor: Color,
+    textColor: Color,
+    onClick: () -> Unit
+) {
+
+    val buttonInteractionSource = remember { MutableInteractionSource() }
+    val isPressed by buttonInteractionSource.collectIsPressedAsState()
+
+    val roundedCornerPercentage by animateIntAsState(
+        targetValue = if (isPressed) 30 else 100
+    )
+
+    val buttonScale by animateFloatAsState(
+        targetValue = if(isPressed) 0.9f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+        )
+    )
+
+    TextButton(
+        modifier = Modifier
+            .scale(buttonScale),
+        shape = RoundedCornerShape(percent = roundedCornerPercentage),
+        colors = ButtonDefaults.textButtonColors(containerColor = containerColor),
+        onClick = onClick,
+        interactionSource = buttonInteractionSource,
+        content = {
+            Text(text = buttonText, color = textColor)
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(imageVector = Icons.Outlined.Download, contentDescription = buttonText, tint = textColor)
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
