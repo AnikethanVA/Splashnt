@@ -1,6 +1,6 @@
 # Splashnt
 
-A wallpaper browser and setter app for Android, built with Jetpack Compose and powered by the [Unsplash API](https://unsplash.com/developers).
+A wallpaper browser and setter app for Android, built with Jetpack Compose and powered by Unsplash's unofficial internal API (`unsplash.com/napi/`) — no API key required.
 
 ## Features
 
@@ -25,15 +25,13 @@ All libraries are chosen for **Kotlin Multiplatform** compatibility.
 
 ## Setup
 
-1. Get a free API key from [Unsplash Developers](https://unsplash.com/developers)
-2. Add it to `local.properties` in the project root:
-   ```
-   UNSPLASH_ACCESS_KEY=your_key_here
-   ```
-3. Build and run:
-   ```bash
-   ./gradlew assembleDebug
-   ```
+No API key needed. Just build and run:
+
+```bash
+./gradlew assembleDebug
+```
+
+The app hits Unsplash's unofficial `napi` endpoint (the same one their website uses). Premium (Unsplash+) photos are filtered out at the repository layer since they aren't downloadable without a paid account.
 
 **Requirements:** Android Studio, minSdk 30 (Android 11+), targetSdk 36
 

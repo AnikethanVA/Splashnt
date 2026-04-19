@@ -12,7 +12,9 @@ data class UnsplashModel(
 
     val urls: UnsplashURLS,
 
-    val user: UnsplashUser
+    val user: UnsplashUser,
+
+    val premium: Boolean? = null
 
 )
 

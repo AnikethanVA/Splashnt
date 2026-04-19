@@ -1,6 +1,5 @@
 package com.ava.splashnt.data.remote
 
-import com.ava.splashnt.BuildConfig
 import com.ava.splashnt.data.model.UnsplashModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -14,7 +13,6 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.io.IOException
@@ -48,8 +46,7 @@ class UnsplashApiClient {
         }
 
         defaultRequest {
-            url("https://api.unsplash.com/")
-            header("Authorization", "Client-ID ${BuildConfig.UNSPLASH_ACCESS_KEY}")
+            url("https://unsplash.com/napi/")
         }
     }
 

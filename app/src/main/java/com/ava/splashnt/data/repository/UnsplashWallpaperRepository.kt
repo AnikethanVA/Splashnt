@@ -5,6 +5,6 @@ import com.ava.splashnt.data.remote.UnsplashApiClient
 
 class UnsplashWallpaperRepository(private val client: UnsplashApiClient): WallpaperRepository {
     override suspend fun fetchImages(page: Int, imagesPerPage: Int): List<UnsplashModel> {
-        return client.fetchPhotos(page, imagesPerPage)
+        return client.fetchPhotos(page, imagesPerPage).filter { it.premium != true }
     }
 }
