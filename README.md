@@ -4,7 +4,7 @@ A wallpaper browser and setter app for Android, built with Jetpack Compose and p
 
 ## Features
 
-- **Browse wallpapers** — Staggered grid layout with infinite scroll pagination
+- **Browse wallpapers** — Staggered grid layout with infinite scroll pagination and pull-to-refresh
 - **Full-screen viewer** — Pinch-to-zoom (1x–5x), pan with clamped boundaries, double-tap to toggle fit/fill
 - **Photographer details** — Tap to reveal an animated overlay with photographer name and profile link
 - **Download** — Save images to device via DownloadManager with notification progress
@@ -55,7 +55,7 @@ app/src/main/java/com/ava/splashnt/
 ## Roadmap
 
 - **Additional Sources** — Pexels API integration, navigation drawer for source selection, multi-provider switching
-- **Polish** — Pull-to-refresh, splash screen, categories/search filtering, dynamic theming, shared element transitions
+- **Polish** — Splash screen, categories/search filtering, shared element transitions
 
 ## License
 

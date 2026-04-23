@@ -16,11 +16,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,16 +49,22 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    when(uiState) {
+    when(val state = uiState) {
         is Loading -> {
             ShowLoader(modifier)
         }
         is Error -> {
-            ShowError(modifier = modifier, errorMessage = (uiState as Error).errorMessage)
+            ShowError(modifier = modifier, errorMessage = state.errorMessage)
         }
 
         is Success -> {
-            ShowWallpapers(modifier = modifier, wallpaperUIState = (uiState as Success), onLoadMore = viewModel::loadMoreImages, onImageClicked = onImageClicked)
+            ShowWallpapers(modifier = modifier,
+                wallpaperUIState = state,
+                onLoadMore = viewModel::loadMoreImages,
+                onRefresh = viewModel::onRefresh,
+                onStatusMessageShown = viewModel::onStatusMessageShown,
+                onImageClicked = onImageClicked
+            )
         }
     }
 }
@@ -99,54 +110,76 @@ fun ShowWallpapers(
     modifier: Modifier = Modifier,
     wallpaperUIState: Success,
     onLoadMore: () -> Unit,
+    onRefresh: () -> Unit,
+    onStatusMessageShown: () -> Unit,
     onImageClicked: (UnsplashModel) -> Unit
 ) {
 
     val lazyStaggeredGridState = rememberLazyStaggeredGridState()
+    val snackBarHostState = remember { SnackbarHostState() }
 
-    LazyVerticalStaggeredGrid(
-        state = lazyStaggeredGridState,
+    PullToRefreshBox(
         modifier = modifier
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 8.dp),
-        columns = StaggeredGridCells.Fixed(2),
-        verticalItemSpacing = 8.dp,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        isRefreshing = wallpaperUIState.isRefreshing,
+        onRefresh = onRefresh
     ) {
-        items(items = wallpaperUIState.images) { image ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                onClick = {
-                    onImageClicked(image)
-                },
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 0.dp,
-                )
-            ) {
-                AsyncImage(
-                    model = image.urls.thumbUrl,
-                    contentDescription = image.description,
+        LazyVerticalStaggeredGrid(
+            state = lazyStaggeredGridState,
+            columns = StaggeredGridCells.Fixed(2),
+            verticalItemSpacing = 8.dp,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(items = wallpaperUIState.images) { image ->
+                Card(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    contentScale = ContentScale.FillWidth,
-                )
+                    onClick = {
+                        onImageClicked(image)
+                    },
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 0.dp,
+                    )
+                ) {
+                    AsyncImage(
+                        model = image.urls.thumbUrl,
+                        contentDescription = image.description,
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        contentScale = ContentScale.FillWidth,
+                    )
+                }
+            }
+
+            if (wallpaperUIState.isPaginating && lazyStaggeredGridState.canScrollBackward) {
+                item(span = FullLine) {
+                    ShowBottomLoader()
+                }
             }
         }
 
-        if (wallpaperUIState.isPaginating && lazyStaggeredGridState.canScrollBackward) {
-            item(span = FullLine) {
-                ShowBottomLoader()
-            }
-        }
+        SnackbarHost(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            hostState = snackBarHostState
+        )
+    }
 
+    LaunchedEffect(wallpaperUIState.statusMessage) {
+        wallpaperUIState.statusMessage?.let { statusMessage ->
+            snackBarHostState.showSnackbar(
+                message = statusMessage,
+                duration = SnackbarDuration.Short
+            )
+            onStatusMessageShown()
+        }
     }
 
     LaunchedEffect(lazyStaggeredGridState, wallpaperUIState.images.size, wallpaperUIState.isPaginating) {
         snapshotFlow {
             val lastVisibleItemIndex = lazyStaggeredGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            val reachedBottom = lastVisibleItemIndex >= (wallpaperUIState.images.size - 1)
+            val reachedBottom = lastVisibleItemIndex >= (wallpaperUIState.images.size - 10)
             reachedBottom && lazyStaggeredGridState.isScrollInProgress
         }
             .distinctUntilChanged()
