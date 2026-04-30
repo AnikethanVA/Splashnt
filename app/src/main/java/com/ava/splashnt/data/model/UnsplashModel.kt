@@ -8,6 +8,14 @@ data class UnsplashModel(
 
     val id: String,
 
+    /*
+    Can the below width and height be used
+    instead of waiting for it in the onSuccess of coil SubcomposeAsyncImage in DetailsScreen ?
+    */
+    val width: Int,
+
+    val height: Int,
+
     val description: String?,
 
     val urls: UnsplashURLS,

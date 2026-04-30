@@ -1,5 +1,6 @@
 package com.ava.splashnt.ui.home
 
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ava.splashnt.data.repository.WallpaperRepositoryProvider
@@ -20,6 +21,8 @@ class HomeViewModel(
     private var defaultImagesPerPage = 20
     private val _uiState = MutableStateFlow<WallpaperUIState>(Loading)
 
+    // Storing lazyStaggeredGridState here to fix images getting shuffled when coming back from DisplayDetails screen to HomeScreen.
+    val lazyStaggeredGridState: LazyStaggeredGridState = LazyStaggeredGridState(0,0)
     private var currentFetchJob: Job? = null
     val uiState = _uiState.asStateFlow()
 

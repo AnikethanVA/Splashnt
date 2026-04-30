@@ -3,14 +3,15 @@ package com.ava.splashnt.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan.Companion.FullLine
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ContainedLoadingIndicator
@@ -58,12 +59,14 @@ fun HomeScreen(
         }
 
         is Success -> {
-            ShowWallpapers(modifier = modifier,
+            ShowWallpapers(
+                modifier = modifier,
                 wallpaperUIState = state,
+                lazyStaggeredGridStateFromViewModel = viewModel.lazyStaggeredGridState,
                 onLoadMore = viewModel::loadMoreImages,
                 onRefresh = viewModel::onRefresh,
                 onStatusMessageShown = viewModel::onStatusMessageShown,
-                onImageClicked = onImageClicked
+                onImageClicked = onImageClicked,
             )
         }
     }
@@ -109,13 +112,13 @@ fun ShowError(
 fun ShowWallpapers(
     modifier: Modifier = Modifier,
     wallpaperUIState: Success,
+    lazyStaggeredGridStateFromViewModel: LazyStaggeredGridState,
     onLoadMore: () -> Unit,
     onRefresh: () -> Unit,
     onStatusMessageShown: () -> Unit,
     onImageClicked: (UnsplashModel) -> Unit
 ) {
 
-    val lazyStaggeredGridState = rememberLazyStaggeredGridState()
     val snackBarHostState = remember { SnackbarHostState() }
 
     PullToRefreshBox(
@@ -126,15 +129,16 @@ fun ShowWallpapers(
         onRefresh = onRefresh
     ) {
         LazyVerticalStaggeredGrid(
-            state = lazyStaggeredGridState,
+            state = lazyStaggeredGridStateFromViewModel,
             columns = StaggeredGridCells.Fixed(2),
             verticalItemSpacing = 8.dp,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items = wallpaperUIState.images) { image ->
+            items(items = wallpaperUIState.images, key = { it.id }) { image ->
                 Card(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .aspectRatio(image.width.toFloat()/image.height),
                     onClick = {
                         onImageClicked(image)
                     },
@@ -153,7 +157,7 @@ fun ShowWallpapers(
                 }
             }
 
-            if (wallpaperUIState.isPaginating && lazyStaggeredGridState.canScrollBackward) {
+            if (wallpaperUIState.isPaginating && lazyStaggeredGridStateFromViewModel.canScrollBackward) {
                 item(span = FullLine) {
                     ShowBottomLoader()
                 }
@@ -176,11 +180,11 @@ fun ShowWallpapers(
         }
     }
 
-    LaunchedEffect(lazyStaggeredGridState, wallpaperUIState.images.size, wallpaperUIState.isPaginating) {
+    LaunchedEffect(lazyStaggeredGridStateFromViewModel, wallpaperUIState.images.size, wallpaperUIState.isPaginating) {
         snapshotFlow {
-            val lastVisibleItemIndex = lazyStaggeredGridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val lastVisibleItemIndex = lazyStaggeredGridStateFromViewModel.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
             val reachedBottom = lastVisibleItemIndex >= (wallpaperUIState.images.size - 10)
-            reachedBottom && lazyStaggeredGridState.isScrollInProgress
+            reachedBottom && lazyStaggeredGridStateFromViewModel.isScrollInProgress
         }
             .distinctUntilChanged()
             .collect { shouldLoadMore ->
