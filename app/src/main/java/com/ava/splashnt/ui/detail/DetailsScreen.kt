@@ -16,10 +16,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -27,10 +23,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,19 +33,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Replay
+import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -67,7 +57,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -87,6 +76,8 @@ import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.toBitmap
 import com.ava.splashnt.data.model.UnsplashModel
+import com.ava.splashnt.ui.common.CenteredLoader
+import com.ava.splashnt.ui.common.SpringyTextButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -97,7 +88,7 @@ fun DetailsScreen(
     modifier: Modifier = Modifier,
     image: UnsplashModel
 ) {
-    ShowFullScreenImage(imageModel = image)
+    ShowFullScreenImage(modifier = modifier, imageModel = image)
 }
 
 @Composable
@@ -168,7 +159,7 @@ fun ShowFullScreenImage(
                 .data(imageModel.urls.fullUrl)
                 .memoryCacheKey("${imageModel.urls.fullUrl}_$retryKey")
                 .build(),
-            loading = { ShowLoader() },
+            loading = { CenteredLoader(backgroundColor = Color.Black) },
             contentDescription = imageModel.description,
             modifier = Modifier
                 .fillMaxWidth()
@@ -300,6 +291,7 @@ fun ImageDetailsOverlay(
                 buttonText = "Download",
                 containerColor = textButtonColorBasedOnWallpaperColor,
                 textColor = textButtonTextColorBasedOnWallpaperColor,
+                trailingIcon = Icons.Outlined.Download
             ) {
                 if((context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
@@ -311,7 +303,8 @@ fun ImageDetailsOverlay(
                 SpringyTextButton(
                     buttonText = "Set As",
                     containerColor = textButtonColorBasedOnWallpaperColor,
-                    textColor = textButtonTextColorBasedOnWallpaperColor
+                    textColor = textButtonTextColorBasedOnWallpaperColor,
+                    trailingIcon = Icons.Outlined.Wallpaper
                 ) {
                         shouldShowSetAsAlertDialog = true
                 }
@@ -350,43 +343,6 @@ fun ImageDetailsOverlay(
             }
         }
     }
-}
-
-@Composable
-fun SpringyTextButton(
-    buttonText: String,
-    containerColor: Color,
-    textColor: Color,
-    onClick: () -> Unit
-) {
-
-    val buttonInteractionSource = remember { MutableInteractionSource() }
-    val isPressed by buttonInteractionSource.collectIsPressedAsState()
-
-    val roundedCornerPercentage by animateIntAsState(
-        targetValue = if (isPressed) 30 else 100
-    )
-
-    val buttonScale by animateFloatAsState(
-        targetValue = if(isPressed) 0.9f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
-        )
-    )
-
-    TextButton(
-        modifier = Modifier
-            .scale(buttonScale),
-        shape = RoundedCornerShape(percent = roundedCornerPercentage),
-        colors = ButtonDefaults.textButtonColors(containerColor = containerColor),
-        onClick = onClick,
-        interactionSource = buttonInteractionSource,
-        content = {
-            Text(text = buttonText, color = textColor)
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(imageVector = Icons.Outlined.Download, contentDescription = buttonText, tint = textColor)
-        },
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -540,21 +496,5 @@ fun ShowLoadImageError(onRetryClicked: () -> Unit) {
                 Icon(imageVector = Icons.Outlined.Replay, contentDescription = "Retry")
             },
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-fun ShowLoader(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .background(Color.Black)
-            .padding(horizontal = 8.dp)
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        ContainedLoadingIndicator()
     }
 }

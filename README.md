@@ -5,6 +5,7 @@ A wallpaper browser and setter app for Android, built with Jetpack Compose and p
 ## Features
 
 - **Browse wallpapers** — Staggered grid layout with infinite scroll pagination and pull-to-refresh
+- **Filter by category** — Chip row above the grid lets you scope the feed to Unsplash featured topics ("All" plus topics like Nature, Architecture, Travel, etc.)
 - **Full-screen viewer** — Pinch-to-zoom (1x–5x), pan with clamped boundaries, double-tap to toggle fit/fill
 - **Photographer details** — Tap to reveal an animated overlay with photographer name and profile link
 - **Download** — Save images to device via DownloadManager with notification progress
@@ -42,20 +43,21 @@ Single-module MVVM app with clean separation between data and UI layers.
 ```
 app/src/main/java/com/ava/splashnt/
 ├── data/
-│   ├── model/          # Unsplash API response models
+│   ├── model/          # Unsplash API response models (UnsplashModel, UnsplashTopic)
 │   ├── remote/         # Ktor HTTP client
 │   └── repository/     # Repository interface + implementations
 ├── di/                 # Koin dependency injection modules
 └── ui/
-    ├── home/           # Staggered grid + ViewModel with pagination
+    ├── home/           # Staggered grid + topic chip row + ViewModel with pagination
     ├── detail/         # Full-screen viewer with gestures + overlays
+    ├── common/         # Reusable composables (CenteredLoader, SpringyTextButton)
     └── theme/          # Material You theming
 ```
 
 ## Roadmap
 
 - **Additional Sources** — Pexels API integration, navigation drawer for source selection, multi-provider switching
-- **Polish** — Splash screen, categories/search filtering, shared element transitions
+- **Polish** — Splash screen, search, shared element transitions
 
 ## License
 
