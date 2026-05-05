@@ -46,7 +46,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.ava.splashnt.BuildConfig
 import com.ava.splashnt.R
 import com.ava.splashnt.data.model.UnsplashModel
 import com.ava.splashnt.ui.common.CenteredLoader

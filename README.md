@@ -56,8 +56,8 @@ app/src/main/java/com/ava/splashnt/
 
 ## Roadmap
 
-- **Additional Sources** — Pexels API integration, navigation drawer for source selection, multi-provider switching
-- **Polish** — Splash screen, search, shared element transitions
+- **Provider abstraction & additional sources** — Extract provider-neutral domain models (`Wallpaper`, `Topic`) as a prerequisite, then add Pexels alongside Unsplash with a navigation drawer for source selection
+- **Polish** — Splash screen, search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), home screen design polish (top bar, wordmark subtitle), shared element transitions
 
 ## License
 
