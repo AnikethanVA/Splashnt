@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun CenteredLoader(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.background,
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
 ) {
     Box(
         modifier = modifier

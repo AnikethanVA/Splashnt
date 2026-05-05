@@ -34,10 +34,20 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import com.ava.splashnt.BuildConfig
+import com.ava.splashnt.R
 import com.ava.splashnt.data.model.UnsplashModel
 import com.ava.splashnt.ui.common.CenteredLoader
 import com.ava.splashnt.ui.common.SpringyTextButton
@@ -55,25 +65,60 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    when(val state = uiState) {
-        is Loading -> {
-            CenteredLoader(modifier)
-        }
-        is Error -> {
-            ShowError(modifier = modifier, errorMessage = state.errorMessage)
-        }
+    Column(
+        modifier = modifier,
+    ) {
+        Text(
+            modifier = Modifier
+                .padding(horizontal = 20.dp)
+            ,
+            text = buildAnnotatedString{
 
-        is Success -> {
-            ShowWallpapers(
-                modifier = modifier,
-                wallpaperUIState = state,
-                lazyStaggeredGridStateFromViewModel = viewModel.lazyStaggeredGridState,
-                onLoadMore = viewModel::loadMoreImages,
-                onRefresh = viewModel::onRefresh,
-                onChipClicked = viewModel::onChipClicked,
-                onStatusMessageShown = viewModel::onStatusMessageShown,
-                onImageClicked = onImageClicked,
+                withStyle(
+                    style = SpanStyle(
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                ) {
+                    append(stringResource(R.string.app_name))
+                }
+
+                withStyle(
+                    style = SpanStyle(
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                ) {
+                    append(".")
+                }
+            },
+            style = TextStyle(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 44.sp,
+                fontWeight = FontWeight.ExtraBold,
+                fontFamily = FontFamily.Default,
+                letterSpacing = (-1.5).sp,
+                lineHeight = 44.sp,
             )
+        )
+
+        when(val state = uiState) {
+            is Loading -> {
+                CenteredLoader()
+            }
+            is Error -> {
+                ShowError(errorMessage = state.errorMessage)
+            }
+
+            is Success -> {
+                ShowWallpapers(
+                    wallpaperUIState = state,
+                    lazyStaggeredGridStateFromViewModel = viewModel.lazyStaggeredGridState,
+                    onLoadMore = viewModel::loadMoreImages,
+                    onRefresh = viewModel::onRefresh,
+                    onChipClicked = viewModel::onChipClicked,
+                    onStatusMessageShown = viewModel::onStatusMessageShown,
+                    onImageClicked = onImageClicked,
+                )
+            }
         }
     }
 }
@@ -85,13 +130,14 @@ fun ShowError(
 ) {
     Box(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 8.dp)
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 20.dp)
             .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "An error occurred: $errorMessage",
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
     }
@@ -117,21 +163,21 @@ fun ShowWallpapers(
 
     Box(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.background)
+            .background(MaterialTheme.colorScheme.surface)
             .fillMaxSize()
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
             TopicChipRow(
-                wallpaperUIState.selectedFeed,
+                selectedFeed = wallpaperUIState.selectedFeed,
                 availableTopics = wallpaperUIState.availableTopics,
                 onChipClicked = onChipClicked
             )
 
             PullToRefreshBox(
                 modifier = Modifier
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 16.dp),
                 isRefreshing = isRefreshing,
                 onRefresh = onRefresh
             ) {
@@ -233,7 +279,7 @@ fun InGridErrorMessage(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(24.dp),
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -259,7 +305,7 @@ private fun ShowBottomLoader() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 16.dp)
         ,
         contentAlignment = Alignment.Center,
     ) {
