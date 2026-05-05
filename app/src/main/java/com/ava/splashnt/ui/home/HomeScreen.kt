@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan.Companion.FullLine
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Replay
 import androidx.compose.material3.Card
@@ -196,6 +197,7 @@ fun ShowWallpapers(
                                     onClick = {
                                         onImageClicked(image)
                                     },
+                                    shape = RoundedCornerShape(percent = 20),
                                     elevation = CardDefaults.cardElevation(
                                         defaultElevation = 8.dp,
                                         pressedElevation = 0.dp,
