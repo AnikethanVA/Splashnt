@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.ava.splashnt"
-        minSdk = 30
+        minSdk = 31
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -69,6 +69,8 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.compose.material.icons.extended)
+
+    implementation(libs.androidx.core.spashscreen)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
