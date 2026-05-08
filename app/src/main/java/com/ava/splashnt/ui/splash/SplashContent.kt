@@ -42,17 +42,15 @@ fun SplashContent(modifier: Modifier = Modifier) {
                 .drawWithCache {
                     val brush = Brush.radialGradient(
                         0.0f to primary,
-                        0.25f to primary,
-                        0.40f to primaryContainer,
-                        0.40f to Color.Transparent,
+                        0.20f to primary,
+                        0.30f to primaryContainer,
+                        0.30f to Color.Transparent,
                         1.0f to Color.Transparent,
                         radius = size.maxDimension,
                     )
                     onDrawBehind { drawRect(brush) }
                 }
-        ) {
-
-        }
+        )
 
         val wordmarkStyle = TextStyle(
             fontSize = 56.sp,

@@ -85,6 +85,7 @@ fun HomeScreen(
                 withStyle(
                     style = SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
+                        fontSize = 60.sp
                     )
                 ) {
                     append(".")
@@ -239,6 +240,10 @@ fun ShowWallpapers(
             modifier = Modifier.align(Alignment.BottomCenter),
             hostState = snackBarHostState
         )
+    }
+
+    LaunchedEffect(wallpaperUIState.selectedFeed) {
+        lazyStaggeredGridStateFromViewModel.requestScrollToItem(0)
     }
 
     LaunchedEffect(wallpaperUIState.statusMessage) {
