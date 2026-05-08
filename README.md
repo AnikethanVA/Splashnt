@@ -34,7 +34,7 @@ No API key needed. Just build and run:
 
 The app hits Unsplash's unofficial `napi` endpoint (the same one their website uses). Premium (Unsplash+) photos are filtered out at the repository layer since they aren't downloadable without a paid account.
 
-**Requirements:** Android Studio, minSdk 30 (Android 11+), targetSdk 36
+**Requirements:** Android Studio, minSdk 31 (Android 12+), targetSdk 36
 
 ## Architecture
 
@@ -57,7 +57,7 @@ app/src/main/java/com/ava/splashnt/
 ## Roadmap
 
 - **Provider abstraction & additional sources** — Extract provider-neutral domain models (`Wallpaper`, `Topic`) as a prerequisite, then add Pexels alongside Unsplash with a navigation drawer for source selection
-- **Polish** — Splash screen, search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
+- **Polish** — Search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
 
 ## License
 
