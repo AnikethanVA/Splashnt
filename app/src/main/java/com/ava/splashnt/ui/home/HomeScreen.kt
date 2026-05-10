@@ -48,7 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.ava.splashnt.R
-import com.ava.splashnt.data.model.UnsplashModel
+import com.ava.splashnt.data.model.Wallpaper
 import com.ava.splashnt.ui.common.CenteredLoader
 import com.ava.splashnt.ui.common.SpringyTextButton
 import com.ava.splashnt.ui.home.WallpaperUIState.Error
@@ -61,7 +61,7 @@ import org.koin.androidx.compose.koinViewModel
 fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel(),
-    onImageClicked: (UnsplashModel) -> Unit
+    onImageClicked: (Wallpaper) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -153,7 +153,7 @@ fun ShowWallpapers(
     onRefresh: () -> Unit,
     onChipClicked: (FeedSelection) -> Unit,
     onStatusMessageShown: () -> Unit,
-    onImageClicked: (UnsplashModel) -> Unit
+    onImageClicked: (Wallpaper) -> Unit
 ) {
 
     val snackBarHostState = remember { SnackbarHostState() }

@@ -43,9 +43,10 @@ Single-module MVVM app with clean separation between data and UI layers.
 ```
 app/src/main/java/com/ava/splashnt/
 ├── data/
-│   ├── model/          # Unsplash API response models (UnsplashModel, UnsplashTopic)
+│   ├── model/          # Domain types (Wallpaper, Topic) + Unsplash API DTOs (UnsplashModel, UnsplashTopic)
+│   ├── mapper/         # DTO → domain extension functions (UnsplashMapper)
 │   ├── remote/         # Ktor HTTP client
-│   └── repository/     # Repository interface + implementations
+│   └── repository/     # Repository interface + implementations (returns domain types)
 ├── di/                 # Koin dependency injection modules
 └── ui/
     ├── home/           # Staggered grid + topic chip row + ViewModel with pagination
@@ -56,7 +57,7 @@ app/src/main/java/com/ava/splashnt/
 
 ## Roadmap
 
-- **Provider abstraction & additional sources** — Extract provider-neutral domain models (`Wallpaper`, `Topic`) as a prerequisite, then add Pexels alongside Unsplash with a navigation drawer for source selection
+- **Provider abstraction & additional sources** — Provider-neutral domain models (`Wallpaper`, `Topic`) extracted; next is adding Pexels alongside Unsplash with a navigation drawer for source selection
 - **Polish** — Search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
 
 ## License

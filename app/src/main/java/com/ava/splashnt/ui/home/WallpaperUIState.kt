@@ -1,12 +1,12 @@
 package com.ava.splashnt.ui.home
 
-import com.ava.splashnt.data.model.UnsplashTopic
+import com.ava.splashnt.data.model.Topic
 
 sealed class WallpaperUIState {
     object Loading: WallpaperUIState()
     data class Success(
         val selectedFeed: FeedSelection,
-        val availableTopics: List<UnsplashTopic>,
+        val availableTopics: List<Topic>,
         val content: ContentState,
         val statusMessage: String? = null
     ): WallpaperUIState()

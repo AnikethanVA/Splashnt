@@ -1,7 +1,7 @@
 package com.ava.splashnt.ui
 
 import androidx.navigation3.runtime.NavKey
-import com.ava.splashnt.data.model.UnsplashModel
+import com.ava.splashnt.data.model.Wallpaper
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -11,5 +11,5 @@ object HomeScreen: Destinations
 
 @Serializable
 data class DetailsScreen(
-    val image: UnsplashModel
+    val image: Wallpaper
 ): Destinations

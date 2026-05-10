@@ -16,14 +16,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ava.splashnt.data.model.UnsplashTopic
+import com.ava.splashnt.data.model.Topic
 
 private const val ALL_CHIP_KEY = "__all__"
 
 @Composable
 fun TopicChipRow(
     selectedFeed: FeedSelection,
-    availableTopics: List<UnsplashTopic>,
+    availableTopics: List<Topic>,
     onChipClicked: (FeedSelection) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -89,11 +89,11 @@ private fun TopicChipRowPreview() {
     TopicChipRow(
         selectedFeed = FeedSelection.All,
         availableTopics = listOf(
-            UnsplashTopic("id-1", "nature", "Nature"),
-            UnsplashTopic("id-2", "spring", "Spring"),
-            UnsplashTopic("id-3", "wallpapers", "Wallpapers"),
-            UnsplashTopic("id-4", "film", "Film"),
-            UnsplashTopic("id-5", "textures", "Textures"),
+            Topic("id-1", "nature", "Nature"),
+            Topic("id-2", "spring", "Spring"),
+            Topic("id-3", "wallpapers", "Wallpapers"),
+            Topic("id-4", "film", "Film"),
+            Topic("id-5", "textures", "Textures"),
         ),
         onChipClicked = {}
     )

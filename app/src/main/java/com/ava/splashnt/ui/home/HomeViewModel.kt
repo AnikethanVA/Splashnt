@@ -3,8 +3,8 @@ package com.ava.splashnt.ui.home
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ava.splashnt.data.model.UnsplashModel
-import com.ava.splashnt.data.model.UnsplashTopic
+import com.ava.splashnt.data.model.Topic
+import com.ava.splashnt.data.model.Wallpaper
 import com.ava.splashnt.data.repository.WallpaperRepository
 import com.ava.splashnt.data.repository.WallpaperRepositoryProvider
 import com.ava.splashnt.data.repository.WallpaperSource
@@ -29,7 +29,7 @@ class HomeViewModel(
     private var currentFetchWallpaperJob: Job? = null
     private var currentFetchTopicsJob: Job? = null
 
-    private var pendingTopics: List<UnsplashTopic>? = null
+    private var pendingTopics: List<Topic>? = null
     private var topicsLoadFailed = false
     val uiState = _uiState.asStateFlow()
 
@@ -105,7 +105,7 @@ class HomeViewModel(
         currentRepo: WallpaperRepository,
         pageToFetch: Int,
         imagesPerPage: Int
-    ): List<UnsplashModel> {
+    ): List<Wallpaper> {
         return when(selectedFeed) {
             is FeedSelection.All -> {
                 currentRepo.fetchImages(page = pageToFetch, imagesPerPage = imagesPerPage)

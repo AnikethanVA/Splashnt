@@ -75,7 +75,7 @@ import androidx.palette.graphics.Palette
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.toBitmap
-import com.ava.splashnt.data.model.UnsplashModel
+import com.ava.splashnt.data.model.Wallpaper
 import com.ava.splashnt.ui.common.CenteredLoader
 import com.ava.splashnt.ui.common.SpringyTextButton
 import kotlinx.coroutines.Dispatchers
@@ -86,7 +86,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun DetailsScreen(
     modifier: Modifier = Modifier,
-    image: UnsplashModel
+    image: Wallpaper
 ) {
     ShowFullScreenImage(modifier = modifier, imageModel = image)
 }
@@ -94,7 +94,7 @@ fun DetailsScreen(
 @Composable
 fun ShowFullScreenImage(
     modifier: Modifier = Modifier,
-    imageModel: UnsplashModel
+    imageModel: Wallpaper
 ) {
 
     var displayHeight by remember { mutableFloatStateOf(0f) }
@@ -234,7 +234,7 @@ fun ShowFullScreenImage(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ImageDetailsOverlay(
-    imageModel: UnsplashModel,
+    imageModel: Wallpaper,
     imageBitmap: Bitmap?,
     textButtonColorBasedOnWallpaperColor: Color,
     textButtonTextColorBasedOnWallpaperColor: Color
@@ -324,16 +324,16 @@ fun ImageDetailsOverlay(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = imageModel.user.userName,
+                    text = imageModel.photographerName,
                     color = Color.White
                 )
                 Text(
                     modifier = Modifier
                         .clickable {
-                            openLinkInBrowser(imageModel.user.userLinks.photographerProfileUrl, context)
+                            openLinkInBrowser(imageModel.photographerProfileUrl, context)
                         }
                     ,
-                    text = imageModel.user.userLinks.photographerProfileUrl,
+                    text = imageModel.photographerProfileUrl,
                     style = TextStyle(
                         textDecoration = TextDecoration.Underline
                     ),
@@ -435,7 +435,7 @@ private enum class WallpaperLocation(val value: Int) {
     BOTH(3)
 }
 
-private fun onDownloadImageClicked(context: Context, image: UnsplashModel) {
+private fun onDownloadImageClicked(context: Context, image: Wallpaper) {
     val downloadManager: DownloadManager = context.getSystemService(DownloadManager::class.java)
     val downloadRequest = DownloadManager
         .Request(image.urls.fullUrl.toUri())
