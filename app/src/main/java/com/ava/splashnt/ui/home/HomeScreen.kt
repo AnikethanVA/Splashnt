@@ -54,6 +54,7 @@ import com.ava.splashnt.ui.common.SpringyTextButton
 import com.ava.splashnt.ui.home.WallpaperUIState.Error
 import com.ava.splashnt.ui.home.WallpaperUIState.Loading
 import com.ava.splashnt.ui.home.WallpaperUIState.Success
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.androidx.compose.koinViewModel
 
@@ -116,6 +117,7 @@ fun HomeScreen(
                     onLoadMore = viewModel::loadMoreImages,
                     onRefresh = viewModel::onRefresh,
                     onChipClicked = viewModel::onChipClicked,
+                    scrollToTopEvents = viewModel.scrollToTopEvents,
                     onStatusMessageShown = viewModel::onStatusMessageShown,
                     onImageClicked = onImageClicked,
                 )
@@ -152,6 +154,7 @@ fun ShowWallpapers(
     onLoadMore: () -> Unit,
     onRefresh: () -> Unit,
     onChipClicked: (FeedSelection) -> Unit,
+    scrollToTopEvents: Flow<Unit>,
     onStatusMessageShown: () -> Unit,
     onImageClicked: (Wallpaper) -> Unit
 ) {
@@ -242,8 +245,10 @@ fun ShowWallpapers(
         )
     }
 
-    LaunchedEffect(wallpaperUIState.selectedFeed) {
-        lazyStaggeredGridStateFromViewModel.requestScrollToItem(0)
+    LaunchedEffect(Unit) {
+        scrollToTopEvents.collect {
+            lazyStaggeredGridStateFromViewModel.requestScrollToItem(0)
+        }
     }
 
     LaunchedEffect(wallpaperUIState.statusMessage) {

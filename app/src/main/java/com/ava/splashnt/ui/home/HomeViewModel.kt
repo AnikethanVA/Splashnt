@@ -10,8 +10,11 @@ import com.ava.splashnt.data.repository.WallpaperRepositoryProvider
 import com.ava.splashnt.data.repository.WallpaperSource
 import com.ava.splashnt.ui.home.WallpaperUIState.*
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class HomeViewModel(
@@ -31,6 +34,9 @@ class HomeViewModel(
 
     private var pendingTopics: List<Topic>? = null
     private var topicsLoadFailed = false
+
+    private var _scrollToTopEvents = Channel<Unit>(Channel.CONFLATED)
+    val scrollToTopEvents: Flow<Unit> = _scrollToTopEvents.receiveAsFlow()
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -77,6 +83,7 @@ class HomeViewModel(
             selectedFeed = newFeed,
             content = ContentState.SwitchingFeed
         )
+        _scrollToTopEvents.trySend(Unit)
 
         currentFetchWallpaperJob = viewModelScope.launch {
             val currentRepo = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource)
