@@ -173,10 +173,12 @@ class HomeViewModel(
                     pageToFetch = currentPage,
                     imagesPerPage = defaultImagesPerPage
                 )
+
                 val allImages = if(isRefreshing) {
                     nextPageImages
                 } else {
-                    currentImages + nextPageImages
+                    val existingIds = currentImages.mapTo(HashSet()) { it.id }
+                    currentImages + nextPageImages.filterNot { it.id in existingIds }
                 }
 
                 val topicsToShow = currentSuccess?.availableTopics ?: pendingTopics ?: emptyList()
