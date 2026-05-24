@@ -10,25 +10,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.ava.splashnt.ui.Destinations
 import com.ava.splashnt.ui.DetailsScreen
 import com.ava.splashnt.ui.HomeScreen
 import com.ava.splashnt.ui.splash.SplashContent
 import com.ava.splashnt.ui.theme.SplashntTheme
 import kotlinx.coroutines.delay
-import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,18 +32,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val navKeySaver = listSaver(
-            save = {navKeyList ->
-                navKeyList.map {  navKey ->
-                    Json.encodeToString(navKey)
-                }
-            },
-            restore = { navKeyList ->
-                navKeyList.map { navKeyString ->
-                    Json.decodeFromString<Destinations>(navKeyString)
-                }.toMutableStateList()
-            }
-        )
         setContent {
             SplashntTheme {
                 var showSplash by rememberSaveable { mutableStateOf(true) }
@@ -62,7 +46,7 @@ class MainActivity : ComponentActivity() {
                     if(shouldShowSplash) {
                         SplashContent()
                     } else {
-                        val backstack = rememberSaveable(saver = navKeySaver) { mutableStateListOf(HomeScreen) }
+                        val backstack = rememberNavBackStack(HomeScreen)
                         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                             NavDisplay(
                                 backStack = backstack,
