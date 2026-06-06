@@ -6,7 +6,7 @@ import com.ava.splashnt.data.model.Topic
 import com.ava.splashnt.data.model.Wallpaper
 import com.ava.splashnt.data.model.WallpaperUrls
 
-fun PexelsPhoto.toWallpaper() = Wallpaper(
+fun PexelsPhoto.toWallpaper(): Wallpaper = Wallpaper(
     id = id.toString(),
     width = width,
     height = height,
@@ -20,7 +20,7 @@ fun PexelsPhoto.toWallpaper() = Wallpaper(
     photographerProfileUrl = photographerUrl,
 )
 
-fun PexelsCollection.toTopic() = Topic(
+fun PexelsCollection.toTopic(): Topic = Topic(
     id = id,
     slug = id,
     title = title,
