@@ -34,6 +34,12 @@ No API key needed. Just build and run:
 
 The app hits Unsplash's unofficial `napi` endpoint (the same one their website uses). Premium (Unsplash+) photos are filtered out at the repository layer since they aren't downloadable without a paid account.
 
+**Pexels (optional):** A Pexels source is wired into the data layer for the upcoming multi-source support. It isn't reachable from the UI yet, so no key is needed to build or run today. To exercise it later, add a free [Pexels API key](https://www.pexels.com/api/) to `local.properties` (git-ignored):
+
+```properties
+PEXELS_API_KEY=your_key_here
+```
+
 **Requirements:** Android Studio, minSdk 31 (Android 12+), targetSdk 36
 
 ## Architecture
@@ -43,10 +49,10 @@ Single-module MVVM app with clean separation between data and UI layers.
 ```
 app/src/main/java/com/ava/splashnt/
 ├── data/
-│   ├── model/          # Domain types (Wallpaper, Topic) + Unsplash API DTOs (UnsplashModel, UnsplashTopic)
-│   ├── mapper/         # DTO → domain extension functions (UnsplashMapper)
-│   ├── remote/         # Ktor HTTP client
-│   └── repository/     # Repository interface + implementations (returns domain types)
+│   ├── model/          # Domain types (Wallpaper, Topic) + per-provider DTOs (Unsplash*, Pexels*)
+│   ├── mapper/         # DTO → domain extension functions (UnsplashMapper, PexelsMapper)
+│   ├── remote/         # Shared Ktor client factory + per-provider API clients (Unsplash, Pexels)
+│   └── repository/     # WallpaperRepository interface + Unsplash/Pexels impls, picked by WallpaperRepositoryProvider
 ├── di/                 # Koin dependency injection modules
 └── ui/
     ├── home/           # Staggered grid + topic chip row + ViewModel with pagination
@@ -55,9 +61,11 @@ app/src/main/java/com/ava/splashnt/
     └── theme/          # Material You theming
 ```
 
+See [`docs/architecture.md`](docs/architecture.md) for Mermaid class/flow diagrams of the data layer, UI state model, and navigation (renders inline on GitHub).
+
 ## Roadmap
 
-- **Provider abstraction & additional sources** — Provider-neutral domain models (`Wallpaper`, `Topic`) extracted; next is adding Pexels alongside Unsplash with a navigation drawer for source selection
+- **Provider abstraction & additional sources** — Provider-neutral domain models (`Wallpaper`, `Topic`) extracted, and Pexels wired in as a sibling `PexelsWallpaperRepository` (data layer complete); next is a navigation drawer + source switching to surface it in the UI
 - **Polish** — Search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
 
 ## License
