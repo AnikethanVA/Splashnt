@@ -13,6 +13,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -21,7 +22,8 @@ class HomeViewModel(
     private val wallpaperRepositoryProvider: WallpaperRepositoryProvider
 ): ViewModel() {
 
-    private var currentWallpaperSource = WallpaperSource.UNSPLASH
+    private val _currentWallpaperSource: MutableStateFlow<WallpaperSource> = MutableStateFlow(WallpaperSource.UNSPLASH)
+    val currentWallpaperSource: StateFlow<WallpaperSource> = _currentWallpaperSource.asStateFlow()
 
     private var currentPage = 1
     private var defaultImagesPerPage = 20
@@ -45,9 +47,9 @@ class HomeViewModel(
     }
 
     fun onProviderChanged(newWallpaperSource: WallpaperSource) {
-        if(currentWallpaperSource != newWallpaperSource) {
+        if(currentWallpaperSource.value != newWallpaperSource) {
             _uiState.value = Loading
-            currentWallpaperSource = newWallpaperSource
+            _currentWallpaperSource.value = newWallpaperSource
             currentPage = 1
             fetchWallpapers(isPaginating = false, isRefreshing = false)
         }
@@ -86,7 +88,7 @@ class HomeViewModel(
         _scrollToTopEvents.trySend(Unit)
 
         currentFetchWallpaperJob = viewModelScope.launch {
-            val currentRepo = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource)
+            val currentRepo = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource.value)
             try {
                 val fetchedImages = fetchImagesForFeed(
                     selectedFeed = newFeed,
@@ -127,7 +129,7 @@ class HomeViewModel(
         currentFetchTopicsJob?.cancel()
         currentFetchTopicsJob = viewModelScope.launch {
             try {
-                val fetchedTopics = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource).fetchFeaturedTopics()
+                val fetchedTopics = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource.value).fetchFeaturedTopics()
                 val currentState = _uiState.value
                 if(currentState is Success) {
                     _uiState.value = currentState.copy(availableTopics = fetchedTopics)
@@ -153,7 +155,7 @@ class HomeViewModel(
 
         currentFetchWallpaperJob?.cancel()
         currentFetchWallpaperJob = viewModelScope.launch {
-            val currentRepo = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource)
+            val currentRepo = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource.value)
             try {
                 if((isPaginating || isRefreshing) && currentImages.isNotEmpty()) {
                     _uiState.value = Success(
