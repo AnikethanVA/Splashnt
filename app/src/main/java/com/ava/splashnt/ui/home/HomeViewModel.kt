@@ -52,6 +52,7 @@ class HomeViewModel(
             _currentWallpaperSource.value = newWallpaperSource
             currentPage = 1
             fetchWallpapers(isPaginating = false, isRefreshing = false)
+            fetchTopics()
         }
     }
 
