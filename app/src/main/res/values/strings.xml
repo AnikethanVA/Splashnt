@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Splashnt</string>
+
+    <string name="source_selection_sheet_title">Select your preferred Source</string>
 </resources>
