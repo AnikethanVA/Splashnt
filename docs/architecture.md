@@ -1,8 +1,8 @@
 # Splashnt — Architecture Diagrams
 
 > Visual companion to `CLAUDE.md`. Mermaid renders natively on GitHub and in most
-> IDE Markdown previews. Diagrams describe the structure as of 2026-06-06 (Pexels
-> integration complete). Keep them in sync when the data/UI layers change.
+> IDE Markdown previews. Diagrams describe the structure as of 2026-06-11 (source
+> picker complete). Keep them in sync when the data/UI layers change.
 
 Splashnt is a single-module (`:app`) MVVM Android app. Requests flow **UI → ViewModel
 → Repository (selected by source) → API client → network**, and responses flow back as
@@ -18,7 +18,7 @@ Koin (`di/KoinModule.kt`) constructs every box below and injects the arrows.
 ```mermaid
 flowchart TD
     subgraph UI["UI layer — ui/"]
-        HS["HomeScreen<br/>(+ TopicChipRow)"]
+        HS["HomeScreen<br/>(+ TopicChipRow, SourcePill,<br/>SourcePickerSheet)"]
         DS["DetailsScreen"]
     end
 
@@ -65,9 +65,11 @@ flowchart TD
     DOMAIN --> STATE
 ```
 
-> **Note:** `HomeViewModel` already has `onProviderChanged(WallpaperSource)`, but no UI
-> currently calls it — source switching (navigation drawer) is the open Phase-8 item.
-> The data layer below is fully wired for both providers regardless.
+> **Note:** Source switching is user-facing as of 2026-06-11: the `SourcePill` in the
+> Home header opens `SourcePickerSheet` (a `ModalBottomSheet`), which calls
+> `HomeViewModel.onProviderChanged(WallpaperSource)` — that resets to page 1 / feed
+> "All", sets `Loading`, and re-fetches both photos **and** topics for the new provider.
+> The active source is exposed as `currentWallpaperSource: StateFlow<WallpaperSource>`.
 
 ---
 
@@ -102,6 +104,7 @@ classDiagram
         <<enumeration>>
         UNSPLASH
         PEXELS
+        +sourceName: String
     }
     class UnsplashApiClient {
         +fetchPhotos() List~UnsplashModel~
@@ -284,9 +287,12 @@ flowchart TD
     EP --> DSD["DetailsScreen(Wallpaper) (NavKey)"]
 
     HSD --> HS["HomeScreen composable"]
-    HS --> TCR["TopicChipRow"]
+    HS --> TCR["TopicChipRow<br/>(TopicChip atoms)"]
+    HS --> SP["SourcePill"]
+    SP -->|"opens"| SPS["SourcePickerSheet"]
+    SPS -->|"onProviderChanged(source)"| HVM
     HS --> CL1["CenteredLoader"]
-    HS -.->|observes StateFlow| HVM["HomeViewModel"]
+    HS -.->|observes uiState + currentWallpaperSource| HVM["HomeViewModel"]
     HVM -.->|scrollToTopEvents| HS
     HS -->|"onClick → backstack.add"| DSD
 

@@ -1,11 +1,12 @@
 # Splashnt
 
-A wallpaper browser and setter app for Android, built with Jetpack Compose and powered by Unsplash's unofficial internal API (`unsplash.com/napi/`) — no API key required.
+A wallpaper browser and setter app for Android, built with Jetpack Compose. Browse wallpapers from Unsplash (default, no API key required) or Pexels — switchable in-app.
 
 ## Features
 
 - **Browse wallpapers** — Staggered grid layout with infinite scroll pagination and pull-to-refresh
-- **Filter by category** — Chip row above the grid lets you scope the feed to Unsplash featured topics ("All" plus topics like Nature, Architecture, Travel, etc.)
+- **Switch sources** — A pill in the header opens a bottom-sheet picker to swap between Unsplash and Pexels; the grid and category chips reload for the chosen provider
+- **Filter by category** — Chip row above the grid lets you scope the feed to the provider's featured categories (Unsplash topics or Pexels collections)
 - **Full-screen viewer** — Pinch-to-zoom (1x–5x), pan with clamped boundaries, double-tap to toggle fit/fill
 - **Photographer details** — Tap to reveal an animated overlay with photographer name and profile link
 - **Download** — Save images to device via DownloadManager with notification progress
@@ -26,7 +27,7 @@ All libraries are chosen for **Kotlin Multiplatform** compatibility.
 
 ## Setup
 
-No API key needed. Just build and run:
+No API key needed for the default Unsplash source. Just build and run:
 
 ```bash
 ./gradlew assembleDebug
@@ -34,7 +35,7 @@ No API key needed. Just build and run:
 
 The app hits Unsplash's unofficial `napi` endpoint (the same one their website uses). Premium (Unsplash+) photos are filtered out at the repository layer since they aren't downloadable without a paid account.
 
-**Pexels (optional):** A Pexels source is wired into the data layer for the upcoming multi-source support. It isn't reachable from the UI yet, so no key is needed to build or run today. To exercise it later, add a free [Pexels API key](https://www.pexels.com/api/) to `local.properties` (git-ignored):
+**Pexels (optional):** To use the Pexels source (switchable from the header's source picker), add a free [Pexels API key](https://www.pexels.com/api/) to `local.properties` (git-ignored). Without a key the app still builds and runs on Unsplash; switching to Pexels just lands on an error state.
 
 ```properties
 PEXELS_API_KEY=your_key_here
@@ -55,7 +56,7 @@ app/src/main/java/com/ava/splashnt/
 │   └── repository/     # WallpaperRepository interface + Unsplash/Pexels impls, picked by WallpaperRepositoryProvider
 ├── di/                 # Koin dependency injection modules
 └── ui/
-    ├── home/           # Staggered grid + topic chip row + ViewModel with pagination
+    ├── home/           # Staggered grid + topic chip row + source picker + ViewModel with pagination
     ├── detail/         # Full-screen viewer with gestures + overlays
     ├── common/         # Reusable composables (CenteredLoader, SpringyTextButton)
     └── theme/          # Material You theming
@@ -65,7 +66,7 @@ See [`docs/architecture.md`](docs/architecture.md) for Mermaid class/flow diagra
 
 ## Roadmap
 
-- **Provider abstraction & additional sources** — Provider-neutral domain models (`Wallpaper`, `Topic`) extracted, and Pexels wired in as a sibling `PexelsWallpaperRepository` (data layer complete); next is a navigation drawer + source switching to surface it in the UI
+- **Additional sources** — Provider abstraction complete: provider-neutral domain models (`Wallpaper`, `Topic`), Pexels as a sibling `PexelsWallpaperRepository`, and in-app source switching via the bottom-sheet picker; next candidate source is Wallhaven
 - **Polish** — Search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
 
 ## License
