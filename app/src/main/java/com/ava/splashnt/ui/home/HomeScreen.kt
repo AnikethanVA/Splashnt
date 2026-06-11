@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,7 +31,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,42 +69,55 @@ fun HomeScreen(
     onImageClicked: (Wallpaper) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentSource by viewModel.currentWallpaperSource.collectAsState()
+    var shouldShowSourceSelector by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = modifier,
     ) {
-        Text(
+
+        Row(
             modifier = Modifier
-                .padding(horizontal = 20.dp)
-            ,
-            text = buildAnnotatedString{
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = buildAnnotatedString{
 
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                ) {
-                    append(stringResource(R.string.app_name))
-                }
+                    withStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    ) {
+                        append(stringResource(R.string.app_name))
+                    }
 
-                withStyle(
-                    style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 60.sp
-                    )
-                ) {
-                    append(".")
-                }
-            },
-            style = TextStyle(
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 44.sp,
-                fontWeight = FontWeight.ExtraBold,
-                fontFamily = FontFamily.Default,
-                letterSpacing = (-1.5).sp,
-                lineHeight = 44.sp,
+                    withStyle(
+                        style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 60.sp
+                        )
+                    ) {
+                        append(".")
+                    }
+                },
+                style = TextStyle(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 44.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = FontFamily.Default,
+                    letterSpacing = (-1.5).sp,
+                    lineHeight = 44.sp,
+                )
             )
-        )
+
+            SourcePill(
+                currentSource = currentSource,
+                onClick = { shouldShowSourceSelector = true }
+            )
+        }
 
         when(val state = uiState) {
             is Loading -> {
@@ -122,6 +139,14 @@ fun HomeScreen(
                     onImageClicked = onImageClicked,
                 )
             }
+        }
+
+        if(shouldShowSourceSelector) {
+            SourcePickerSheet(
+                currentSource = currentSource,
+                onClickSource = viewModel::onProviderChanged,
+                onDismiss = { shouldShowSourceSelector = false }
+            )
         }
     }
 }
