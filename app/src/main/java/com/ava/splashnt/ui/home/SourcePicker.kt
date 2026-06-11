@@ -1,6 +1,5 @@
 package com.ava.splashnt.ui.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,11 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -77,8 +75,16 @@ fun SourcePickerSheet(
 
     ModalBottomSheet(
         sheetState = sheetState,
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        dragHandle = null
     ) {
+
+        BottomSheetDefaults.DragHandle(
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally),
+            color = MaterialTheme.colorScheme.primary
+        )
+
         Text(
             text = stringResource(R.string.source_selection_sheet_title),
             style = MaterialTheme.typography.titleMedium,
