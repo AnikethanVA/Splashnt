@@ -1,10 +1,8 @@
 package com.ava.splashnt.ui.home
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +27,7 @@ fun TopicChipRow(
 ) {
     LazyRow(
         modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(
             vertical = 8.dp,
             horizontal = 20.dp
@@ -37,22 +36,10 @@ fun TopicChipRow(
         item(
             key = ALL_CHIP_KEY
         ) {
-
-            val isNoTopicSelected = selectedFeed is FeedSelection.All
-            FilterChip(
-                selected = isNoTopicSelected,
+            TopicChip(
+                selected = selectedFeed is FeedSelection.All,
                 onClick = { onChipClicked(FeedSelection.All) },
-                label = { Text("All") },
-                shape = RoundedCornerShape(percent = 50),
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceDim,
-                ),
-                contentPadding = PaddingValues(12.dp),
-                border = if(isNoTopicSelected) {
-                    BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.secondaryContainer)
-                } else {
-                    BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline)
-                }
+                label = "All"
             )
         }
 
@@ -60,27 +47,32 @@ fun TopicChipRow(
             items = availableTopics,
             key = { it.id }
         ) { topic ->
-            Spacer(modifier = Modifier.width(8.dp))
-
-            val isTopicSelected = selectedFeed is FeedSelection.Topic && topic.slug == selectedFeed.slug
-
-            FilterChip(
-                selected = isTopicSelected,
+            TopicChip(
+                selected = selectedFeed is FeedSelection.Topic && topic.slug == selectedFeed.slug,
                 onClick = { onChipClicked(FeedSelection.Topic(slug = topic.slug, displayName = topic.title)) },
-                label = { Text(text = topic.title) },
-                shape = RoundedCornerShape(percent = 50),
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceDim,
-                ),
-                contentPadding = PaddingValues(12.dp),
-                border = if(isTopicSelected) {
-                        BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.secondaryContainer)
-                    } else {
-                        BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline)
-                    }
+                label = topic.title
             )
         }
     }
+}
+
+@Composable
+private fun TopicChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: String
+) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(text = label) },
+        shape = RoundedCornerShape(percent = 50),
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        ),
+        contentPadding = PaddingValues(12.dp),
+        border = null
+    )
 }
 
 @Preview(showSystemUi = true)
