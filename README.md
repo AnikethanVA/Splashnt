@@ -9,7 +9,7 @@ A wallpaper browser and setter app for Android, built with Jetpack Compose. Brow
 - **Filter by category** — Chip row above the grid lets you scope the feed to the provider's featured categories (Unsplash topics or Pexels collections)
 - **Full-screen viewer** — Pinch-to-zoom (1x–5x), pan with clamped boundaries, double-tap to toggle fit/fill
 - **Photographer details** — Tap to reveal an animated overlay with photographer name and profile link
-- **Download** — Save images to device via DownloadManager with notification progress
+- **Download** — Save images to `Pictures/Splashnt` via DownloadManager with notification progress
 - **Set as wallpaper** — Apply images to home screen, lock screen, or both via WallpaperManager
 - **Material You** — Dynamic theming with Material 3 expressive components
 
@@ -67,7 +67,7 @@ See [`docs/architecture.md`](docs/architecture.md) for Mermaid class/flow diagra
 ## Roadmap
 
 - **Additional sources** — Provider abstraction complete: provider-neutral domain models (`Wallpaper`, `Topic`), Pexels as a sibling `PexelsWallpaperRepository`, and in-app source switching via the bottom-sheet picker; next candidate source is Wallhaven
-- **Polish** — Search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
+- **Polish** — Search, empty-topic/video-collection filtering (drop categories with no photos + a "no images" empty state), wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
 
 ## License
 

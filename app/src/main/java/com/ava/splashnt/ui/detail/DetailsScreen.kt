@@ -75,6 +75,7 @@ import androidx.palette.graphics.Palette
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.toBitmap
+import com.ava.splashnt.R
 import com.ava.splashnt.data.model.Wallpaper
 import com.ava.splashnt.ui.common.CenteredLoader
 import com.ava.splashnt.ui.common.SpringyTextButton
@@ -440,7 +441,7 @@ private fun onDownloadImageClicked(context: Context, image: Wallpaper) {
     val downloadRequest = DownloadManager
         .Request(image.urls.fullUrl.toUri())
         .setTitle("Downloading Wallpaper - ${image.id}")
-        .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "${image.id}.jpg")
+        .setDestinationInExternalPublicDir(Environment.DIRECTORY_PICTURES, "${context.getString(R.string.app_name)}/${image.id}.jpg")
         .setNotificationVisibility(VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
     val status = downloadManager.enqueue(downloadRequest)
     if(status == -1L) {
