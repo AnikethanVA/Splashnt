@@ -11,6 +11,7 @@ import com.ava.splashnt.data.repository.WallpaperSource
 import com.ava.splashnt.ui.home.WallpaperUIState.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,19 +51,16 @@ class HomeViewModel(
         if(currentWallpaperSource.value != newWallpaperSource) {
             _uiState.value = Loading
             _currentWallpaperSource.value = newWallpaperSource
-            currentPage = 1
             fetchWallpapers(isPaginating = false, isRefreshing = false)
             fetchTopics()
         }
     }
 
     fun loadMoreImages() {
-        currentPage ++
         fetchWallpapers(isPaginating = true, isRefreshing = false)
     }
 
     fun onRefresh() {
-        currentPage = 1
         fetchWallpapers(isPaginating = false, isRefreshing = true)
     }
 
@@ -100,6 +98,7 @@ class HomeViewModel(
                 val currentSuccessState = _uiState.value as? Success ?: return@launch
                 _uiState.value = currentSuccessState.copy(content = ContentState.Loaded(fetchedImages))
             } catch(_: Exception) {
+                ensureActive()
                 val current = _uiState.value as? Success ?: return@launch
                 val errorMessage = when (newFeed) {
                     FeedSelection.All -> "Couldn't load wallpapers"
@@ -138,6 +137,7 @@ class HomeViewModel(
                     pendingTopics = fetchedTopics
                 }
             } catch(_: Exception) {
+                ensureActive()
                 val current = _uiState.value
                 if (current is Success) {
                     _uiState.value = current.copy(statusMessage = "Couldn't load topics")
@@ -170,10 +170,12 @@ class HomeViewModel(
                     )
                 }
 
+                val pageToFetch = if(isPaginating) currentPage + 1 else 1
+
                 val nextPageImages = fetchImagesForFeed(
                     selectedFeed = selectedFeed,
                     currentRepo = currentRepo,
-                    pageToFetch = currentPage,
+                    pageToFetch = pageToFetch,
                     imagesPerPage = defaultImagesPerPage
                 )
 
@@ -198,7 +200,9 @@ class HomeViewModel(
                         null
                     }
                 )
+                currentPage = pageToFetch
             } catch(exception: Exception) {
+                ensureActive()
                 if((isPaginating || isRefreshing) && currentImages.isNotEmpty()) {
                     _uiState.value = Success(
                         selectedFeed = selectedFeed,
