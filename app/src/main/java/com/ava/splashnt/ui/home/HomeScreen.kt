@@ -255,9 +255,16 @@ fun ShowWallpapers(
                     }
 
                     is ContentState.FeedFailed -> {
-                        InGridErrorMessage(
-                            errorMessage = content.errorMessage,
+                        InGridStatusMessage(
+                            message = content.errorMessage,
                             onRetry = { onChipClicked(wallpaperUIState.selectedFeed) }
+                        )
+                    }
+
+                    is ContentState.Empty -> {
+                        InGridStatusMessage(
+                            message = "No images found.",
+                            onRetry = onRefresh
                         )
                     }
                 }
@@ -307,10 +314,10 @@ fun ShowWallpapers(
 }
 
 @Composable
-fun InGridErrorMessage(
+fun InGridStatusMessage(
     modifier: Modifier = Modifier,
-    errorMessage: String,
-    onRetry: () -> Unit
+    message: String,
+    onRetry: (() -> Unit)? = null
 ) {
     Box(
         modifier = modifier
@@ -322,14 +329,16 @@ fun InGridErrorMessage(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(text = errorMessage, textAlign = TextAlign.Center)
-            SpringyTextButton(
-                buttonText = "Retry",
-                containerColor = MaterialTheme.colorScheme.primary,
-                textColor = MaterialTheme.colorScheme.onPrimary,
-                onClick = onRetry,
-                trailingIcon = Icons.Outlined.Replay
-            )
+            Text(text = message, textAlign = TextAlign.Center)
+            onRetry?.let {
+                SpringyTextButton(
+                    buttonText = "Retry",
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    textColor = MaterialTheme.colorScheme.onPrimary,
+                    onClick = it,
+                    trailingIcon = Icons.Outlined.Replay
+                )
+            }
         }
     }
 }

@@ -10,4 +10,6 @@ sealed class ContentState {
         val isRefreshing: Boolean = false,
     ): ContentState()
     data class FeedFailed(val errorMessage: String): ContentState()
+
+    object Empty: ContentState()
 }

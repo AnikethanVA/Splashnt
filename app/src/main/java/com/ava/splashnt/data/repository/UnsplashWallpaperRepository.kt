@@ -17,6 +17,7 @@ class UnsplashWallpaperRepository(private val client: UnsplashApiClient): Wallpa
     override suspend fun fetchFeaturedTopics(): List<Topic> {
         return client
             .fetchTopics()
+            .filter { it.totalPhotos > 0 }
             .map { it.toTopic() }
     }
 

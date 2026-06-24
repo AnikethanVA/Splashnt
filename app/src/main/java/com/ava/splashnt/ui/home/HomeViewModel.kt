@@ -27,6 +27,7 @@ class HomeViewModel(
     val currentWallpaperSource: StateFlow<WallpaperSource> = _currentWallpaperSource.asStateFlow()
 
     private var currentPage = 1
+    private var canPaginate = true
     private var defaultImagesPerPage = 20
     private val _uiState = MutableStateFlow<WallpaperUIState>(Loading)
 
@@ -57,7 +58,9 @@ class HomeViewModel(
     }
 
     fun loadMoreImages() {
-        fetchWallpapers(isPaginating = true, isRefreshing = false)
+        if(canPaginate) {
+            fetchWallpapers(isPaginating = true, isRefreshing = false)
+        }
     }
 
     fun onRefresh() {
@@ -96,14 +99,13 @@ class HomeViewModel(
                     imagesPerPage = defaultImagesPerPage
                 )
                 val currentSuccessState = _uiState.value as? Success ?: return@launch
-                _uiState.value = currentSuccessState.copy(content = ContentState.Loaded(fetchedImages))
+
+                canPaginate = fetchedImages.isNotEmpty()
+                _uiState.value = currentSuccessState.copy(content = getContentState(fetchedImages))
             } catch(_: Exception) {
                 ensureActive()
                 val current = _uiState.value as? Success ?: return@launch
-                val errorMessage = when (newFeed) {
-                    FeedSelection.All -> "Couldn't load wallpapers"
-                    is FeedSelection.Topic -> "Couldn't load \"${newFeed.displayName}\""
-                }
+                val errorMessage = getFeedErrorMessage(newFeed)
                 _uiState.value = current.copy(content = ContentState.FeedFailed(errorMessage))
             }
         }
@@ -158,16 +160,21 @@ class HomeViewModel(
         currentFetchWallpaperJob = viewModelScope.launch {
             val currentRepo = wallpaperRepositoryProvider.getWallpaperProvider(currentWallpaperSource.value)
             try {
-                if((isPaginating || isRefreshing) && currentImages.isNotEmpty()) {
-                    _uiState.value = Success(
-                        selectedFeed = selectedFeed,
-                        availableTopics = currentSuccess?.availableTopics ?: emptyList(),
-                        content = ContentState.Loaded(
-                            images = currentImages,
-                            isPaginating = isPaginating,
-                            isRefreshing = isRefreshing,
+
+                when{
+                    currentSuccess != null && (isPaginating || isRefreshing) && currentImages.isNotEmpty() -> {
+                        _uiState.value = currentSuccess.copy(
+                            content = ContentState.Loaded(
+                                images = currentImages,
+                                isPaginating = isPaginating,
+                                isRefreshing = isRefreshing,
+                            )
                         )
-                    )
+                    }
+
+                    currentSuccess != null && isRefreshing -> {
+                        _uiState.value = currentSuccess.copy(content = ContentState.SwitchingFeed)
+                    }
                 }
 
                 val pageToFetch = if(isPaginating) currentPage + 1 else 1
@@ -192,7 +199,7 @@ class HomeViewModel(
                 _uiState.value = Success(
                     selectedFeed = selectedFeed,
                     availableTopics = topicsToShow,
-                    content = ContentState.Loaded(images = allImages),
+                    content = getContentState(allImages),
                     statusMessage = if(topicsLoadFailed) {
                         topicsLoadFailed = false
                         "Couldn't load topics"
@@ -200,19 +207,44 @@ class HomeViewModel(
                         null
                     }
                 )
-                currentPage = pageToFetch
+                canPaginate = nextPageImages.isNotEmpty()
+                if (nextPageImages.isNotEmpty()) currentPage = pageToFetch
             } catch(exception: Exception) {
                 ensureActive()
-                if((isPaginating || isRefreshing) && currentImages.isNotEmpty()) {
-                    _uiState.value = Success(
-                        selectedFeed = selectedFeed,
-                        availableTopics = currentSuccess?.availableTopics ?: emptyList(),
-                        content = ContentState.Loaded(images = currentImages),
-                        statusMessage = "Something Went Wrong")
-                } else {
-                    _uiState.value = Error("Error Message: ${exception.message}")
+                val latestSuccess = _uiState.value as? Success
+                when {
+                    latestSuccess == null -> {
+                        _uiState.value = Error("Error Message: ${exception.message}")
+                    }
+                    currentImages.isNotEmpty() -> {
+                        _uiState.value = latestSuccess.copy(
+                            content = ContentState.Loaded(images = currentImages),
+                            statusMessage = "Something Went Wrong"
+                        )
+                    }
+                    else -> {
+                        val errorMessage = getFeedErrorMessage(selectedFeed)
+                        _uiState.value = latestSuccess.copy(
+                            content = ContentState.FeedFailed(errorMessage)
+                        )
+                    }
                 }
             }
+        }
+    }
+
+    private fun getFeedErrorMessage(feed: FeedSelection): String {
+        return when (feed) {
+            FeedSelection.All -> "Couldn't load wallpapers"
+            is FeedSelection.Topic -> "Couldn't load \"${feed.displayName}\""
+        }
+    }
+
+    private fun getContentState(images: List<Wallpaper>): ContentState {
+        return if(images.isEmpty()) {
+            ContentState.Empty
+        } else {
+            ContentState.Loaded(images)
         }
     }
 }

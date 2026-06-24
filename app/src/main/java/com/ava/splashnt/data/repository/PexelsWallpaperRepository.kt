@@ -11,11 +11,16 @@ class PexelsWallpaperRepository(private val client: PexelsApiClient): WallpaperR
         page: Int,
         imagesPerPage: Int
     ): List<Wallpaper> {
-        return client.fetchCurated(page, imagesPerPage).photos.map { it.toWallpaper() }
+        return client
+            .fetchCurated(page, imagesPerPage)
+            .photos.map { it.toWallpaper() }
     }
 
     override suspend fun fetchFeaturedTopics(): List<Topic> {
-        return client.fetchFeaturedCollections(perPage = 30).collections.map { it.toTopic() }
+        return client
+            .fetchFeaturedCollections(perPage = 30)
+            .collections.filter { it.photosCount > 0 }
+            .map { it.toTopic() }
     }
 
     override suspend fun fetchTopicImages(
@@ -23,6 +28,8 @@ class PexelsWallpaperRepository(private val client: PexelsApiClient): WallpaperR
         page: Int,
         imagesPerPage: Int
     ): List<Wallpaper> {
-        return client.fetchCollectionPhotos(slug, page, imagesPerPage).media.map { it.toWallpaper() }
+        return client
+            .fetchCollectionPhotos(slug, page, imagesPerPage)
+            .media.map { it.toWallpaper() }
     }
 }

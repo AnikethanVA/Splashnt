@@ -67,7 +67,7 @@ See [`docs/architecture.md`](docs/architecture.md) for Mermaid class/flow diagra
 ## Roadmap
 
 - **Additional sources** — Provider abstraction complete: provider-neutral domain models (`Wallpaper`, `Topic`), Pexels as a sibling `PexelsWallpaperRepository`, and in-app source switching via the bottom-sheet picker; next candidate source is Wallhaven
-- **Polish** — Search, empty-topic/video-collection filtering (drop categories with no photos + a "no images" empty state), wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
+- **Polish** — Search, wallpaper crop preview before applying (via `WallpaperManager.getCropAndSetWallpaperIntent`), collapsing header on scroll, home screen design polish (top bar, wordmark subtitle), shared element transitions
 
 ## License
 

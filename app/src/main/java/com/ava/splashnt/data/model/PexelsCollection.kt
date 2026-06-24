@@ -1,11 +1,15 @@
 package com.ava.splashnt.data.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class PexelsCollection(
     val id: String,
     val title: String,
+
+    @SerialName("photos_count")
+    val photosCount: Int = 0,
 )
 
 @Serializable
