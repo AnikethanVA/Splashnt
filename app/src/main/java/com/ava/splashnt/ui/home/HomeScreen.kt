@@ -31,30 +31,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.ava.splashnt.R
 import com.ava.splashnt.data.model.Wallpaper
 import com.ava.splashnt.ui.common.CenteredLoader
 import com.ava.splashnt.ui.common.SpringyTextButton
+import com.ava.splashnt.ui.common.WordMark
 import com.ava.splashnt.ui.home.WallpaperUIState.Error
 import com.ava.splashnt.ui.home.WallpaperUIState.Loading
 import com.ava.splashnt.ui.home.WallpaperUIState.Success
@@ -83,34 +76,10 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = buildAnnotatedString{
-
-                    withStyle(
-                        style = SpanStyle(
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    ) {
-                        append(stringResource(R.string.app_name))
-                    }
-
-                    withStyle(
-                        style = SpanStyle(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 60.sp
-                        )
-                    ) {
-                        append(".")
-                    }
-                },
-                style = TextStyle(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 44.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontFamily = FontFamily.Default,
-                    letterSpacing = (-1.5).sp,
-                    lineHeight = 44.sp,
-                )
+            WordMark(
+                fontSize = 44.sp,
+                letterSpacing = (-1.5f).sp,
+                dotSize = 12.dp
             )
 
             SourcePill(
